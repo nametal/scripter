@@ -5,6 +5,20 @@ DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 myCRED=$DIR/cred
 myTERM=$DIR/term
 
+helpme() {
+	echo -e "calm down, here are some tools for you... ${uSMILE} \n"
+	echo -e "ssh-mongo              - connect to remote mongo machine with ssh (semi-automatic)"
+	echo -e "to-mongo               - connect to remote mongo machine directly (automatic)"
+	echo -e "ssh-whoami             - get whoami status from remote machine by service name"
+	echo -e "qkill                  - quick kill process by service name"
+	echo -e "qpush                  - quick push binary to repo"
+	echo -e "unlock-keyboard        - resolve idea \"can\'t type\" problem"
+	echo -e "getPortFromService     - self explanatory"
+	echo -e "getCurrentGitBranch    - self explanatory"
+	echo -e "getCurrentBuildVersion - self explanatory"
+	echo -e "wew                    - check last command return status"
+}
+
 # check last command return status
 wew() {
 	if [ $? -eq 0 ]; then
@@ -68,7 +82,7 @@ ssh-mongo() {
 	#    this is why I called it semi-automatic ;p
 }
 
-# connect to remote mongo directly
+# connect to remote mongo machine directly
 # automatic function, except rs.slaveOk()
 to-mongo() {
 	if [ -z "$2" ]; then
@@ -173,11 +187,11 @@ getCurrentBuildVersion() {
 	echo $(git branch | grep '*' | cut -d'/' -f2).$(git log --format="%h" | head -1)-$1
 }
 
-# push binary to repo
-push() {
+# quick push binary to repo
+qpush() {
 	if [ -z "$2" ]; then
-		echo "usage: push <service_name> <version>"
-		echo "  eg. push frs fixCommonInfo"
+		echo "usage: qpush <service_name> <version>"
+		echo "  eg. qpush frs fixCommonInfo"
 		return 1
 	fi
 
@@ -196,7 +210,7 @@ push() {
 	popd
 
 	echo "New Version:"
-	echo $newVERSION
+	echo -e "${cCYAN}${newVERSION}"
 }
 
 # get password from credentials
