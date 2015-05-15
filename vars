@@ -1,0 +1,70 @@
+#!/bin/bash
+
+# unicode symbol
+uSMILE='\u263A'
+uFROWN='\u2639'
+uCHECK='\u2611'
+uWRONG='\u2612'
+
+# color constants
+cRED="\033[01;31m"
+cGREEN="\033[01;32m"
+cBLUE="\033[01;34m"
+cYELLOW="\033[01;33m"
+cCYAN="\033[01;36m"
+cWHITE="\033[00m"
+
+# Color info
+# Attribute codes:
+#     00=none
+#     01=bold
+#     04=underscore
+#     05=blink
+#     07=reverse
+#     08=concealed
+
+# Text color codes:
+#     30=black
+#     31=red
+#     32=green
+#     33=yellow
+#     34=blue
+#     35=magenta
+#     36=cyan
+#     37=white
+
+# Background color codes:
+#     40=black
+#     41=red
+#     42=green
+#     43=yellow
+#     44=blue
+#     45=magenta
+#     46=cyan
+#     47=white
+colors-info() {
+	local fgc bgc vals seq0
+
+	printf "Color escapes are %s\n" '\e[${value};...;${value}m'
+	printf "Values 30..37 are \e[33mforeground colors\e[m\n"
+	printf "Values 40..47 are \e[43mbackground colors\e[m\n"
+	printf "Value  1 gives a  \e[1mbold-faced look\e[m\n\n"
+
+	# foreground colors
+	for fgc in {30..37}; do
+		# background colors
+		for bgc in {40..47}; do
+			fgc=${fgc#37} # white
+			bgc=${bgc#40} # black
+
+			vals="${fgc:+$fgc;}${bgc}"
+			vals=${vals%%;}
+
+			seq0="${vals:+\e[${vals}m}"
+			printf "  %-9s" "${seq0:-(default)}"
+			printf " ${seq0}TEXT\e[m"
+			printf " \e[${vals:+${vals+$vals;}}1mBOLD\e[m"
+		done
+		echo; echo
+	done
+}

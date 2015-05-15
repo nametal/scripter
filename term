@@ -1,0 +1,3 @@
+# each key must unique
+env1:development
+env2:production

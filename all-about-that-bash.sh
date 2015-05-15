@@ -1,57 +1,98 @@
+DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+
+. $DIR/vars
+
+CRED=$DIR/cred
+TERM=$DIR/term
+
+# check last command return status
+wew() {
+	if [ $? -eq 0 ]; then
+		echo -e "${cCYAN}${uSMILE}"
+	else
+		echo -e "${cRED}${uFROWN}"
+	fi
+}
+
 # resolve idea "can't type" problem
-unlock_keyboard() {
+unlock-keyboard() {
     ibus-daemon -rd
-    if [ $(ps aux | grep -c "ibus-daemon -rd") -ge 2 ]
+    if [ $(ps aux | grep -v grep | grep -c "ibus-daemon -rd") -ge 1 ]
     then
         echo "Success"
     else
         echo "Failed"
+        return 1
     fi
 }
 
 # get current git branch name
-parsed_git_branch () {
+getCurrentGitBranch () {
   git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/[\1]/'
 }
 
-# connect to remote mongo machine
+# connect to remote mongo machine with ssh
 # warning! this is semi-automatic function
 ssh-mongo() {
-	local TARGET_MACHINE=$1
-	local DB_NAME=$2
-	local AUTH_TYPE=$3
-
-	local MONGO_USER='yourUserName'
-	local MONGO_PWD='yourPassword'
-	local SLAVEOK='\nrs.slaveOk()'
-
-	if [ -z "$1" ]; then
-		echo 'usage: ssh-mongo <MACHINE> <DB_NAME> [<AUTH_TYPE>]'
-		echo '	MACHINE		eg. data02 for mongodata02'
-		echo '	DB_NAME 	eg. space-agent'
-		echo '	AUTH_TYPE	optional, admin for admin, leave empty for dev'
-		echo 'NOTE! after logged in to remote machine, paste (Ctrl+Shift+V) '
-		return
+	if [ -z "$2" ]; then
+		echo "usage: ssh-mongo <machine_code> <db_name> [<auth_type>]"
+		echo "  machine_code    eg. data02 for mongodata02"
+		echo "  db_name         eg. $(getTerm env1)-agent"
+		echo "  auth_type       optional, admin for admin, leave empty for dev"
+		return 1
 	fi
 
-	if [ -z "$DB_NAME" ]; then
-		DB_NAME='data'
+	if [ -z "$3" ]; then
+		local MONGO_USER=dev
+		local SLAVEOK='\nrs.slaveOk()'
+	else
+		if [ $3 = 'admin' ]; then
+			local MONGO_USER=admin
+		else
+			echo "invalid auth type '${3}'"
+			return 2
+		fi
 	fi
-
-	if [ -n "$AUTH_TYPE" ] && [ $AUTH_TYPE = 'admin' ]; then
-		MONGO_USER='space-admin'
-		MONGO_PWD='yourAdminPassword'
-		SLAVEOK=
-	fi
+	local MONGO_PWD=$(getPassword $MONGO_USER)
 
 	# 1. store all mongo commands to clipboard
-	local CMDS="mongo\nuse ${DB_NAME} \ndb.auth('${MONGO_USER}','${MONGO_PWD}')${SLAVEOK}"
+	local CMDS="mongo\nuse ${2} \ndb.auth('${MONGO_USER}','${MONGO_PWD}')${SLAVEOK}"
 	echo -e $CMDS | xclip -sel c
+	echo "after ssh logged in, please paste (Ctrl+Shift+V)"
+	read -p "press any key to continue..."
 
-	# 2. call ssh to remote machine
-	ssh mongo$TARGET_MACHINE
+	# 2. ssh to remote machine
+	ssh mongo$1
 
 	# 3. manual paste (Ctrl+Shift+V) on terminal
+	#    this is why I called it semi-automatic ;p
+}
+
+# connect to remote mongo directly
+# automatic function, except rs.slaveOk()
+to-mongo() {
+	if [ -z "$2" ]; then
+		echo "usage: to-mongo <machine_code> <db_name> [<auth_type>]"
+		echo "  machine_code    eg. data02 for mongodata02"
+		echo "  db_name         eg. $(getTerm env1)-agent"
+		echo "  auth_type       optional, admin for admin, leave empty for dev"
+		return 1
+	fi
+
+	if [ -z "$3" ]; then
+		local MONGO_USER=dev
+		local SLAVEOK='\nrs.slaveOk()'
+	else
+		if [ $3 = 'admin' ]; then
+			local MONGO_USER=admin
+		else
+			echo "invalid auth type '${3}'"
+			return 2
+		fi
+	fi
+	local MONGO_PWD=$(getPassword $MONGO_USER)
+	
+	mongo --host mongo$1 --port 27017 -u $MONGO_USER -p $MONGO_PWD $2
 }
 
 # get whoami status from remote machine by service name
@@ -60,80 +101,77 @@ ssh-whoami() {
 	local SERVICE_NAME=$2
 	local PORT=80
 
-	if [ -z "$1" ] || [ -z "$2" ]; then
-		echo 'usage: ssh-whoami <MACHINE> <SERVICE_NAME>'
-		echo '  MACHINE        remote machine, eg. frs15'
-		echo '  SERVICE_NAME   eg. tap, frs, fetcher'
-		return
+	if [ -z "$2" ]; then
+		echo "usage: ssh-whoami <machine_name> <service_name>"
+		echo "  machine_name    remote machine, eg. frs15"
+		echo "  service_name    eg. tap, frs, fetcher"
+		return 1
 	fi
 
-	if [ $SERVICE_NAME = "fetcher" ]; then
-		ssh $1 "cat /var/space/fetcher/build.properties"
-		return
+	if [ $2 = "fetcher" ]; then
+		ssh $1 "cat /var/$(getTerm env1)/fetcher/build.properties"
+		return 0
 	fi
 
-	local PORT=$(getPortFromService $SERVICE_NAME)
+	local PORT=$(getPortFromService $2)
 	if [ -z "$PORT" ]; then
-		echo "Service ${2} not found"
-		return
+		echo "service '${2}' not found"
+		return 2
 	fi
 	ssh $1 "curl localhost:${PORT}/whoami" | python -m json.tool
 }
 
+tes() {
+	local X=$(getTerm env2)COM_LISTEN_PORT	
+	echo ${!X}
+}
+
 # self explanatory
 getPortFromService() {
-	local PORT=
 	case "$1" in
-		"tv") PORT=$SPACECOM_LISTEN_PORT;;
-		"tap") PORT=$TAP_LISTEN_PORT;;
-		"frs") PORT=$FRS_LISTEN_PORT;;
-		"fb") PORT=$FB_LISTEN_PORT;;
-		"hinv") PORT=$HOTEL_INV_LISTEN_PORT;;
-		"pg") PORT=$PG_LISTEN_PORT;;
-		"ne") PORT=$NAMED_ENTITY_LISTEN_PORT;;
+		"tv") local genPort=$(getTerm env2)COM_LISTEN_PORT
+			  local PORT=${!genPort};;
+		"tap") local PORT=$TAP_LISTEN_PORT;;
+		"frs") local PORT=$FRS_LISTEN_PORT;;
+		"fb") local PORT=$FB_LISTEN_PORT;;
+		"hinv") local PORT=$HOTEL_INV_LISTEN_PORT;;
+		"pg") local PORT=$PG_LISTEN_PORT;;
+		"ne") local PORT=$NAMED_ENTITY_LISTEN_PORT;;
+		*) return 1;;
 	esac
 	echo $PORT
 }
 
-tes() {
-	$1
-	if [ $? -eq 0 ]; then
-		echo -e "${CYAN}${uSMILE}"
-	else
-		echo -e "${RED}${uFROWN}"
-	fi
-}
-
-# kill process by service name
+# quick kill process by service name
 qkill() {
-	local SERVICE_NAME=$1
-
-	if [ -z "$SERVICE_NAME" ]; then
-		echo 'usage: qkill <SERVICE_NAME>'
-		echo '	SERVICE_NAME	eg. tv, frs, tap'
-		return
+	if [ -z "$1" ]; then
+		echo "usage: qkill <service_name>"
+		echo "  service_name   eg. tv, frs, tap"
+		return 1
 	fi
 
-	local PORT=$(getPortFromService $SERVICE_NAME)
+	local PORT=$(getPortFromService $1)
+
+	if [ -z "$PORT" ]; then
+		echo "service '${1}' not found"
+		return 2
+	fi
 	
-	local PID=$(ps aux | grep -v grep | grep -v artifactory | grep $PORT | awk '{print $2}')
+	local PID=$(ps aux | grep -v grep | grep -v artifactory | grep "jar start.jar" | grep $PORT | awk '{print $2}')
 	
 	if [ -z "$PID" ]; then
-		echo "${SERVICE_NAME} service is not running"
-		return
+		echo "service '${1}' is not running"
+		return 3
 	fi
 
-	# dangerous! please review!
-	# kill $PID
-
-	if [ $? -eq 0 ]; then
-		echo 'Success'
-	else
-		echo 'Failed'
-	fi
+	# be careful, it is dangerous! please review!
+	read -p "PID ${PID}, press any key to kill..."
+	kill $PID
+	wew
 }
 
 getServiceFromPort() {
+	# TODO, use sed
 	echo 'dummy'
 }
 
@@ -144,15 +182,14 @@ getCurrentBuildVersion() {
 # push binary to repo
 push() {
 	if [ -z "$2" ]; then
-		echo 'usage: push <SERVICE_NAME> <VERSION>'
-		echo '   eg. push frs fixCommonInfo'
-		return
+		echo "usage: push <service_name> <version>"
+		echo "  eg. push frs fixCommonInfo"
+		return 1
 	fi
 
 	local VERSION=$(getCurrentBuildVersion $2)
-	echo $VERSION
 
-	pushd $SPACE_ROOT/repository/deploy-scripts
+	pushd ~/tools/repository/deploy-scripts
 	
 	if [ $1 = "fetcher" ]; then
 		./push-fetcher.sh ${VERSION} repo01
@@ -164,78 +201,50 @@ push() {
 
 	popd
 
-	echo "new version = ${VERSION}"
+	echo "New Version:"
+	echo $VERSION
 }
 
-  #############
- # CONSTANTS #
-#############
+# get password from credentials
+getPassword() {
+	if [ -z "$1" ]; then
+		echo "usage: getPassword <username>"
+		return 1
+	fi
 
-# unicode symbol
-uSMILE='\u263A'
-uFROWN='\u2639'
-uCHECK='\u2611'
-uWRONG='\u2612'
+	local password=$(cat $CRED | grep ^$1: | cut -d : -f 2)
+	if [ -z "$password" ]; then
+		echo "password for '${1}' not found"
+		return 2
+	fi
 
-# color constants
-RED="\033[01;31m"
-GREEN="\033[01;32m"
-BLUE="\033[01;34m"
-YELLOW="\033[01;33m"
-CYAN="\033[01;36m"
-NO_COLOR="\033[00m"
+	local passwordFound=$(cat $CRED | grep -c ^$1:)
+	if [ $passwordFound -gt 1 ]; then
+		echo "duplicate entry for '${1}'"
+		return 3
+	fi
 
-# Color info
-# Attribute codes:
-#     00=none
-#     01=bold
-#     04=underscore
-#     05=blink
-#     07=reverse
-#     08=concealed
+	echo $password
+}
 
-# Text color codes:
-#     30=black
-#     31=red
-#     32=green
-#     33=yellow
-#     34=blue
-#     35=magenta
-#     36=cyan
-#     37=white
+# get your own defined term
+getTerm() {
+	if [ -z "$1" ]; then
+		echo "usage: getTerm <term>"
+		return 1
+	fi
 
-# Background color codes:
-#     40=black
-#     41=red
-#     42=green
-#     43=yellow
-#     44=blue
-#     45=magenta
-#     46=cyan
-#     47=white
-colors-info() {
-	local fgc bgc vals seq0
+	local term=$(cat $TERM | grep ^$1: | cut -d : -f 2)
+	if [ -z "$term" ]; then
+		echo "term '${1}' not found"
+		return 2
+	fi
 
-	printf "Color escapes are %s\n" '\e[${value};...;${value}m'
-	printf "Values 30..37 are \e[33mforeground colors\e[m\n"
-	printf "Values 40..47 are \e[43mbackground colors\e[m\n"
-	printf "Value  1 gives a  \e[1mbold-faced look\e[m\n\n"
+	local termFound=$(cat $TERM | grep -c ^$1:)
+	if [ $termFound -ne 1 ]; then
+		echo "duplicate entry for '${1}'"
+		return 3
+	fi
 
-	# foreground colors
-	for fgc in {30..37}; do
-		# background colors
-		for bgc in {40..47}; do
-			fgc=${fgc#37} # white
-			bgc=${bgc#40} # black
-
-			vals="${fgc:+$fgc;}${bgc}"
-			vals=${vals%%;}
-
-			seq0="${vals:+\e[${vals}m}"
-			printf "  %-9s" "${seq0:-(default)}"
-			printf " ${seq0}TEXT\e[m"
-			printf " \e[${vals:+${vals+$vals;}}1mBOLD\e[m"
-		done
-		echo; echo
-	done
+	echo $term
 }
