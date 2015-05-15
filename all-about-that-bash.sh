@@ -2,8 +2,8 @@ DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 . $DIR/vars
 
-CRED=$DIR/cred
-TERM=$DIR/term
+myCRED=$DIR/cred
+myTERM=$DIR/term
 
 # check last command return status
 wew() {
@@ -97,10 +97,6 @@ to-mongo() {
 
 # get whoami status from remote machine by service name
 ssh-whoami() {
-	local TARGET_MACHINE=$1
-	local SERVICE_NAME=$2
-	local PORT=80
-
 	if [ -z "$2" ]; then
 		echo "usage: ssh-whoami <machine_name> <service_name>"
 		echo "  machine_name    remote machine, eg. frs15"
@@ -151,29 +147,27 @@ qkill() {
 	fi
 
 	local PORT=$(getPortFromService $1)
-
 	if [ -z "$PORT" ]; then
 		echo "service '${1}' not found"
 		return 2
 	fi
 	
 	local PID=$(ps aux | grep -v grep | grep -v artifactory | grep "jar start.jar" | grep $PORT | awk '{print $2}')
-	
 	if [ -z "$PID" ]; then
 		echo "service '${1}' is not running"
 		return 3
 	fi
 
-	# be careful, it is dangerous! please review!
+	# be careful, it is dangerous!
 	read -p "PID ${PID}, press any key to kill..."
 	kill $PID
 	wew
 }
 
-getServiceFromPort() {
+# getServiceFromPort() {
 	# TODO, use sed
-	echo 'dummy'
-}
+	# echo 'dummy'
+# }
 
 getCurrentBuildVersion() {
 	echo $(git branch | grep '*' | cut -d'/' -f2).$(git log --format="%h" | head -1)-$1
@@ -187,22 +181,22 @@ push() {
 		return 1
 	fi
 
-	local VERSION=$(getCurrentBuildVersion $2)
+	local newVERSION=$(getCurrentBuildVersion $2)
 
 	pushd ~/tools/repository/deploy-scripts
 	
 	if [ $1 = "fetcher" ]; then
-		./push-fetcher.sh ${VERSION} repo01
+		./push-fetcher.sh ${newVERSION} repo01
 		# echo "./push-fetcher.sh ${2} repo01"
 	else
-		./push.sh $1 ${VERSION} repo01 
+		./push.sh $1 ${newVERSION} repo01 
 		# echo "./push.sh ${1} ${2} repo01 "
 	fi
 
 	popd
 
 	echo "New Version:"
-	echo $VERSION
+	echo $newVERSION
 }
 
 # get password from credentials
@@ -212,13 +206,13 @@ getPassword() {
 		return 1
 	fi
 
-	local password=$(cat $CRED | grep ^$1: | cut -d : -f 2)
+	local password=$(cat $myCRED | grep ^$1: | cut -d : -f 2)
 	if [ -z "$password" ]; then
 		echo "password for '${1}' not found"
 		return 2
 	fi
 
-	local passwordFound=$(cat $CRED | grep -c ^$1:)
+	local passwordFound=$(cat $myCRED | grep -c ^$1:)
 	if [ $passwordFound -gt 1 ]; then
 		echo "duplicate entry for '${1}'"
 		return 3
@@ -234,13 +228,13 @@ getTerm() {
 		return 1
 	fi
 
-	local term=$(cat $TERM | grep ^$1: | cut -d : -f 2)
+	local term=$(cat $myTERM | grep ^$1: | cut -d : -f 2)
 	if [ -z "$term" ]; then
 		echo "term '${1}' not found"
 		return 2
 	fi
 
-	local termFound=$(cat $TERM | grep -c ^$1:)
+	local termFound=$(cat $myTERM | grep -c ^$1:)
 	if [ $termFound -ne 1 ]; then
 		echo "duplicate entry for '${1}'"
 		return 3
