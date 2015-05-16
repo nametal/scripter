@@ -6,17 +6,20 @@ myCRED=$DIR/cred
 myTERM=$DIR/term
 
 helpme() {
-	echo -e "calm down, here are some tools for you... ${uSMILE} \n"
-	echo -e "ssh-mongo              - connect to remote mongo machine with ssh (semi-automatic)"
-	echo -e "to-mongo               - connect to remote mongo machine directly (automatic)"
-	echo -e "ssh-whoami             - get whoami status from remote machine by service name"
-	echo -e "qkill                  - quick kill process by service name"
-	echo -e "qpush                  - quick push binary to repo"
-	echo -e "unlock-keyboard        - resolve idea \"can\'t type\" problem"
-	echo -e "getPortFromService     - self explanatory"
-	echo -e "getCurrentGitBranch    - self explanatory"
-	echo -e "getCurrentBuildVersion - self explanatory"
-	echo -e "wew                    - check last command return status"
+	echo -e "
+calm down, here are some tools for you... ${uSMILE} 
+  
+  ssh-mongo              - connect to remote mongo machine with ssh (semi-automatic)
+  to-mongo               - connect to remote mongo machine directly (automatic)
+  ssh-whoami             - get whoami status from remote machine by service name
+  qkill                  - quick kill process by service name
+  qpush                  - quick push binary to repo
+  unlock-keyboard        - resolve idea \"cannot type\" problem
+  getPortFromService     - self explanatory
+  getCurrentGitBranch    - self explanatory
+  getCurrentBuildVersion - self explanatory
+  wew                    - check last command return status
+"
 }
 
 # check last command return status
@@ -132,8 +135,9 @@ ssh-whoami() {
 }
 
 tes() {
-	local X=$(getTerm env2)COM_LISTEN_PORT	
-	echo ${!X}
+	echo "before"
+	[ -n "$1" ]
+	echo "after"
 }
 
 # self explanatory
@@ -184,33 +188,39 @@ qkill() {
 # }
 
 getCurrentBuildVersion() {
-	echo $(git branch | grep '*' | cut -d'/' -f2).$(git log --format="%h" | head -1)-$1
+	if [ -d ".git" ]; then
+		local branchName=$(git branch | grep '*' | cut -d'/' -f2 | cut -d'*' -f2)
+		local hashCode=$(git log --format="%h" | head -1)
+		echo $branchName.$hashCode-$1
+	else
+		echo "this is not a git repository"
+		return 1
+	fi
 }
 
 # quick push binary to repo
 qpush() {
 	if [ -z "$2" ]; then
 		echo "usage: qpush <service_name> <version>"
-		echo "  eg. qpush frs fixCommonInfo"
+		echo "  eg. qpush frs fixAirportInfo"
 		return 1
 	fi
 
-	local newVERSION=$(getCurrentBuildVersion $2)
+	local newVersion=$(getCurrentBuildVersion $2)
 
 	pushd ~/tools/repository/deploy-scripts
 	
 	if [ $1 = "fetcher" ]; then
-		./push-fetcher.sh ${newVERSION} repo01
+		./push-fetcher.sh ${newVersion} repo01
 		# echo "./push-fetcher.sh ${2} repo01"
 	else
-		./push.sh $1 ${newVERSION} repo01 
+		./push.sh $1 ${newVersion} repo01 
 		# echo "./push.sh ${1} ${2} repo01 "
 	fi
 
 	popd
 
-	echo "New Version:"
-	echo -e "${cCYAN}${newVERSION}"
+	echo -e "New Version: ${cCYAN}${newVersion}"
 }
 
 # get password from credentials
