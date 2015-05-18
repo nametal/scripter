@@ -266,4 +266,4 @@ getTerm() {
 }
 
 # force override coloring prompt
-PS1="${debian_chroot:+($debian_chroot)}$ccGREEN\u@\h$ccLIGHTGRAY:$ccYELLOW`getCurrentGitBranch`$ccBLUE\w$ccLIGHTGRAY\$ "
+PS1="${debian_chroot:+($debian_chroot)}$ccGREEN\u@\h$ccLIGHTGRAY:$ccYELLOW\$(getCurrentGitBranch)$ccBLUE\w$ccLIGHTGRAY\$ "
