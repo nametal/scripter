@@ -264,3 +264,6 @@ getTerm() {
 
 	echo $term
 }
+
+# force override coloring prompt
+PS1="${debian_chroot:+($debian_chroot)}$ccGREEN\u@\h$ccLIGHTGRAY:$ccYELLOW`parsed_git_branch`$ccBLUE\w$ccLIGHTGRAY\$ "
