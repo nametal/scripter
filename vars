@@ -7,12 +7,33 @@ uCHECK='\u2611'
 uWRONG='\u2612'
 
 # color constants
-cRED="\033[01;31m"
-cGREEN="\033[01;32m"
-cBLUE="\033[01;34m"
-cYELLOW="\033[01;33m"
-cCYAN="\033[01;36m"
-cWHITE="\033[00m"
+cRED="\e[01;31m"
+cGREEN="\e[01;32m"
+cYELLOW="\e[01;33m"
+cBLUE="\e[01;34m"
+cPURPLE="\e[01;35m"
+cTURQUOISE="\e[01;36m"
+cLIGHTGRAY="\e[00m"
+
+# color with non-printing char (to correctly calculate word-wrapping)
+ccRED='\[\e[01;31m\]'
+ccGREEN='\[\e[01;32m\]'
+ccYELLOW='\[\e[01;33m\]'
+ccBLUE='\[\e[01;34m\]'
+ccPURPLE='\[\e[01;35m\]'
+ccTURQUOISE='\[\e[01;36m\]'
+ccLIGHTGRAY='\[\e[00m\]'
+
+# background color
+bDARKGRAY='\e[40m'
+bRED='\e[41m'
+bGREEN='\e[42m'
+bYELLOW='\e[43m'
+bBLUE='\e[44m'
+bPURPLE='\e[45m'
+bTURQUOISE='\e[46m'
+bLIGHTGRAY='\e[47m'
+
 
 # Color info
 # Attribute codes:

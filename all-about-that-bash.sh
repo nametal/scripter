@@ -25,7 +25,7 @@ calm down, here are some tools for you... ${uSMILE}
 # check last command return status
 wew() {
 	if [ $? -eq 0 ]; then
-		echo -e "${cCYAN}${uSMILE}"
+		echo -e "${cTURQUOISE}${uSMILE}"
 	else
 		echo -e "${cRED}${uFROWN}"
 	fi
@@ -135,9 +135,7 @@ ssh-whoami() {
 }
 
 tes() {
-	echo "before"
-	[ -n "$1" ]
-	echo "after"
+	echo -e "\e[0;33mtes"
 }
 
 # self explanatory
@@ -220,7 +218,7 @@ qpush() {
 
 	popd
 
-	echo -e "New Version: ${cCYAN}${newVersion}"
+	echo -e "New Version: ${cTURQUOISE}${newVersion}"
 }
 
 # get password from credentials
