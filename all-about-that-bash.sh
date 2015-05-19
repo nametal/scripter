@@ -25,9 +25,9 @@ calm down, here are some tools for you... ${uSMILE}
 # check last command return status
 wew() {
 	if [ $? -eq 0 ]; then
-		echo -e "${cTURQUOISE}${uSMILE}"
+		echo -e "${cTURQUOISE}${uCHECK}"
 	else
-		echo -e "${cRED}${uFROWN}"
+		echo -e "${cRED}${uWRONG}"
 	fi
 }
 
@@ -266,4 +266,12 @@ getTerm() {
 }
 
 # force override coloring prompt
-PS1="${debian_chroot:+($debian_chroot)}$ccGREEN\u@\h$ccLIGHTGRAY:$ccYELLOW\$(getCurrentGitBranch)$ccBLUE\w$ccLIGHTGRAY\$ "
+PS1="$ccGREEN\u@\h$ccLIGHTGRAY:$ccYELLOW\$(getCurrentGitBranch)$ccBLUE\w$ccLIGHTGRAY\$ "
+# If this is an xterm set the title to user@host:dir
+case "$TERM" in
+xterm*|rxvt*)
+    PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
+    ;;
+*)
+    ;;
+esac
