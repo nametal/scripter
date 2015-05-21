@@ -2,14 +2,13 @@ DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 . $DIR/vars
 
-myCRED=$DIR/cred
 myTERM=$DIR/term
 
 helpme() {
 	echo -e "
 calm down, here are some tools for you... ${uSMILE} 
   
-  ssh-mongo              - connect to remote mongo machine with ssh (semi-automatic)
+  ssh-mongo              - connect to remote mongo machine using ssh (semi-automatic)
   to-mongo               - connect to remote mongo machine directly (automatic)
   ssh-whoami             - get whoami status from remote machine by service name
   qkill                  - quick kill process by service name
@@ -48,7 +47,7 @@ getCurrentGitBranch () {
   git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/[\1]/'
 }
 
-# connect to remote mongo machine with ssh
+# connect to remote mongo machine using ssh
 # warning! this is semi-automatic function
 ssh-mongo() {
 	if [ -z "$2" ]; then
@@ -70,7 +69,7 @@ ssh-mongo() {
 			return 2
 		fi
 	fi
-	local MONGO_PWD=$(getPassword $MONGO_USER)
+	local MONGO_PWD=$(getTerm $MONGO_USER)
 
 	# 1. store all mongo commands to clipboard
 	local CMDS="mongo\nuse ${2} \ndb.auth('${MONGO_USER}','${MONGO_PWD}')${SLAVEOK}"
@@ -107,7 +106,7 @@ to-mongo() {
 			return 2
 		fi
 	fi
-	local MONGO_PWD=$(getPassword $MONGO_USER)
+	local MONGO_PWD=$(getTerm $MONGO_USER)
 	
 	mongo --host mongo$1 --port 27017 -u $MONGO_USER -p $MONGO_PWD $2
 }
@@ -219,28 +218,6 @@ qpush() {
 	popd
 
 	echo -e "New Version: ${cTURQUOISE}${newVersion}"
-}
-
-# get password from credentials
-getPassword() {
-	if [ -z "$1" ]; then
-		echo "usage: getPassword <username>"
-		return 1
-	fi
-
-	local password=$(cat $myCRED | grep ^$1: | cut -d : -f 2)
-	if [ -z "$password" ]; then
-		echo "password for '${1}' not found"
-		return 2
-	fi
-
-	local passwordFound=$(cat $myCRED | grep -c ^$1:)
-	if [ $passwordFound -gt 1 ]; then
-		echo "duplicate entry for '${1}'"
-		return 3
-	fi
-
-	echo $password
 }
 
 # get your own defined term

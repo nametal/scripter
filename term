@@ -1,3 +1,5 @@
 # each key must unique
+dev:mypassword
+admin:admin123
 env1:development
-env2:production
+env2:DEVELOPMENT
