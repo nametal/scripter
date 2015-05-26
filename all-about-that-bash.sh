@@ -13,6 +13,7 @@ calm down, here are some tools for you... ${uSMILE}
   ssh-whoami             - get whoami status from remote machine by service name
   qkill                  - quick kill process by service name
   qpush                  - quick push binary to repo
+  qpull                  - quick pull binary from repo to a remote server using ssh (semi-automatic)
   unlock-keyboard        - resolve idea \"cannot type\" problem
   getPortFromService     - self explanatory
   getCurrentGitBranch    - self explanatory
@@ -60,7 +61,7 @@ ssh-mongo() {
 
 	if [ -z "$3" ]; then
 		local MONGO_USER=dev
-		local SLAVEOK='\nrs.slaveOk()'
+		local SLAVEOK='rs.slaveOk()'
 	else
 		if [ $3 = 'admin' ]; then
 			local MONGO_USER=admin
@@ -72,8 +73,11 @@ ssh-mongo() {
 	local MONGO_PWD=$(getTerm $MONGO_USER)
 
 	# 1. store all mongo commands to clipboard
-	local CMDS="mongo\nuse ${2} \ndb.auth('${MONGO_USER}','${MONGO_PWD}')${SLAVEOK}"
-	echo -e $CMDS | xclip -sel c
+	local CMDS="mongo
+use ${2}
+db.auth('${MONGO_USER}','${MONGO_PWD}')
+${SLAVEOK}"
+	echo -e "$CMDS" | xclip -sel c
 	echo "after ssh logged in, please paste (Ctrl+Shift+V)"
 	read -p "press any key to continue..."
 
@@ -134,7 +138,8 @@ ssh-whoami() {
 }
 
 tes() {
-	echo -e "\e[0;33mtes"
+	ssh staging04
+	ls
 }
 
 # self explanatory
@@ -205,8 +210,7 @@ qpush() {
 
 	local newVersion=$(getCurrentBuildVersion $2)
 
-	pushd ~/tools/repository/deploy-scripts
-	
+	pushd ~/tools/repository/deploy-scripts	
 	if [ $1 = "fetcher" ]; then
 		./push-fetcher.sh ${newVersion} repo01
 		# echo "./push-fetcher.sh ${2} repo01"
@@ -214,10 +218,47 @@ qpush() {
 		./push.sh $1 ${newVersion} repo01 
 		# echo "./push.sh ${1} ${2} repo01 "
 	fi
-
 	popd
 
-	echo -e "New Version: ${cTURQUOISE}${newVersion}"
+	echo -e "\nNew Version: ${cTURQUOISE}${newVersion}\n"
+}
+
+# quick pull binary from repo to a remote server using ssh (semi-automatic)
+qpull() {
+	if [ -z "$3" ]; then
+		echo "usage: qpull <machine_name> <service_name> <version>"
+		echo "  machine_name    remote machine, eg. staging04"
+		echo "  service_name    eg. tap, frs, fetcher"
+		echo "  version         eg. fixAirportInfo"
+		return 1
+	fi
+
+	if [ $2 = "fetcher" ]; then
+		local pullCommand="/var/traveloka/running/deploy-scripts/remote-pull-fetcher.sh ${3} repo01"
+	else
+		local pullCommand="stop-${2}
+/var/traveloka/running/deploy-scripts/remote-pull.sh ${2} ${3} repo01
+sleep 3
+start-${2}"
+		local logCommand="colortail /var/traveloka/log/${2}_console.log"
+	fi
+	echo $pullCommand
+	echo $logCommand
+
+	# 1. store all mongo commands to clipboard
+	local CMDS="sudo su
+${pullCommand}
+exit
+${logCommand}"
+	echo -e "$CMDS" | xclip -sel c
+	echo "after ssh logged in, please paste (Ctrl+Shift+V)"
+	read -p "press any key to continue..."
+
+	# 2. ssh to remote machine
+	ssh $1
+
+	# 3. manual paste (Ctrl+Shift+V) on terminal
+	#    this is why I called it semi-automatic ;p
 }
 
 # get your own defined term
