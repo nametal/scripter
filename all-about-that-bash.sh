@@ -239,17 +239,15 @@ qpull() {
 	fi
 
 	if [ $2 = "fetcher" ]; then
-		local pullCommand="/var/traveloka/running/deploy-scripts/remote-pull-fetcher.sh ${3} repo01"
+		local pullCommand="/var/$(getTerm env1)/running/deploy-scripts/remote-pull-fetcher.sh ${3} repo01"
 	else
 		local pullCommand="stop-${2}
-/var/traveloka/running/deploy-scripts/remote-pull.sh ${2} ${3} repo01
+/var/$(getTerm env1)/running/deploy-scripts/remote-pull.sh ${2} ${3} repo01
 sleep 3
 start-${2}"
 		local logCommand="sleep 1
-colortail /var/traveloka/log/${2}_console.log"
+colortail /var/$(getTerm env1)/log/${2}_console.log"
 	fi
-	echo $pullCommand
-	echo $logCommand
 
 	# 1. store all mongo commands to clipboard
 	local CMDS="sudo su

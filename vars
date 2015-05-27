@@ -1,5 +1,7 @@
 #!/bin/bash
 
+currentDir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+
 # unicode symbol
 uSMILE='\u263A'
 uFROWN='\u2639'
@@ -116,5 +118,5 @@ ask-prompt() {
 }
 
 change-prompt() {	
-	sed -i -re "s/(theme:)[^:]*$/\1${1}/" term
+	sed -i -re "s/(theme:)[^:]*$/\1${1}/" $currentDir/term
 }
