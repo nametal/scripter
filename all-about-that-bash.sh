@@ -16,8 +16,6 @@ calm down, here are some tools for you... ${uSMILE}
   qpull                  - quick pull binary from repo to a remote server using ssh (semi-automatic)
   unlock-keyboard        - resolve idea \"cannot type\" problem
   getPortFromService     - self explanatory
-  getCurrentGitBranch    - self explanatory
-  getCurrentBuildVersion - self explanatory
   wew                    - check last command return status
 "
 }

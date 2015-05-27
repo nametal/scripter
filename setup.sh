@@ -1,7 +1,6 @@
 #!/bin/bash
 . vars
 
-currentDir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 include="source $currentDir/all-about-that-bash.sh"
 isIncluded=$(cat $HOME/.bashrc | grep -c "$include")
 
