@@ -7,21 +7,25 @@ uCHECK='\u2611'
 uWRONG='\u2612'
 
 # color constants
+cDARKGRAY="\e[01;30m"
 cRED="\e[01;31m"
 cGREEN="\e[01;32m"
 cYELLOW="\e[01;33m"
 cBLUE="\e[01;34m"
 cPURPLE="\e[01;35m"
 cTURQUOISE="\e[01;36m"
+cWHITE="\e[01;37m"
 cLIGHTGRAY="\e[00m"
 
 # color with non-printing char (to correctly calculate word-wrapping)
+ccDARKGRAY='\[\e[01;30m\]'
 ccRED='\[\e[01;31m\]'
 ccGREEN='\[\e[01;32m\]'
 ccYELLOW='\[\e[01;33m\]'
 ccBLUE='\[\e[01;34m\]'
 ccPURPLE='\[\e[01;35m\]'
 ccTURQUOISE='\[\e[01;36m\]'
+ccWHITE='\[\e[01;37m\]'
 ccLIGHTGRAY='\[\e[00m\]'
 
 # background color
@@ -32,7 +36,7 @@ bYELLOW='\e[43m'
 bBLUE='\e[44m'
 bPURPLE='\e[45m'
 bTURQUOISE='\e[46m'
-bLIGHTGRAY='\e[47m'
+bWHITE='\e[47m'
 
 
 # Color info
@@ -88,4 +92,29 @@ colors-info() {
 		done
 		echo; echo
 	done
+}
+
+ask-prompt() {
+	local dummyUser="user"
+	local dummyHost="my-pc"
+	local dummyBranch="[master]"
+	local dummyDir="~/scripter"
+	
+	# default
+	prompt1="$cGREEN$dummyUser@$dummyHost$cLIGHTGRAY:$cYELLOW$dummyBranch$cBLUE$dummyDir$cLIGHTGRAY\$ "
+	# france
+	prompt2="$cRED$dummyUser@$dummyHost$cLIGHTGRAY:$cWHITE$dummyBranch$cBLUE$dummyDir$cLIGHTGRAY\$ "
+	# midnight
+	prompt3="$cBLUE$dummyUser@$dummyHost$cLIGHTGRAY:$cTURQUOISE$dummyBranch$cPURPLE$dummyDir$cLIGHTGRAY\$ "
+	# italy
+	prompt4="$cRED$dummyUser@$dummyHost$cLIGHTGRAY:$cWHITE$dummyBranch$cGREEN$dummyDir$cLIGHTGRAY\$ "	
+
+	echo -e "1 Default  \n\t${prompt1}"
+	echo -e "2 France   \n\t${prompt2}"
+	echo -e "3 Midnight \n\t${prompt3}"
+	echo -e "4 Italy    \n\t${prompt4}"
+}
+
+change-prompt() {	
+	sed -i -re "s/(theme:)[^:]*$/\1${1}/" term
 }

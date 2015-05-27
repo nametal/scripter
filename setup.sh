@@ -1,8 +1,6 @@
 #!/bin/bash
+. vars
 
-function tx() {
-	echo "\033[01;36m$1\033[00m"
-}
 currentDir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 include="source $currentDir/all-about-that-bash.sh"
 isIncluded=$(cat $HOME/.bashrc | grep -c "$include")
@@ -19,9 +17,14 @@ if [ $isIncluded -gt 0 ]; then
 	exit 1
 fi
 
+echo -e "Which prompt do you prefer ?"
+ask-prompt
+read -p "Choose [1..4] : "
+change-prompt $REPLY
+
 echo -e "\n${include}" >> $HOME/.bashrc
 echo -e "Setup complete.
-* Modify $(tx term) file to match your own needs
+* Modify ${cTURQUOISE}term${cLIGHTGRAY} file to match your own needs
 * Please restart your terminal to take effect
 * And type 'helpme' to start
-Good luck \u263A"
+Good luck ${uSMILE}"

@@ -138,8 +138,13 @@ ssh-whoami() {
 }
 
 tes() {
-	ssh staging04
-	ls
+	echo -e "${uFROWN}${uSMILE}"
+	case $1 in
+		1) echo "one";;
+		2) echo "two";;
+		3) echo "three";;
+		4) echo "four";;
+	esac
 }
 
 # self explanatory
@@ -240,7 +245,8 @@ qpull() {
 /var/traveloka/running/deploy-scripts/remote-pull.sh ${2} ${3} repo01
 sleep 3
 start-${2}"
-		local logCommand="colortail /var/traveloka/log/${2}_console.log"
+		local logCommand="sleep 1
+colortail /var/traveloka/log/${2}_console.log"
 	fi
 	echo $pullCommand
 	echo $logCommand
@@ -283,8 +289,19 @@ getTerm() {
 	echo $term
 }
 
+PROMPT_THEME=$(getTerm theme)
 # force override coloring prompt
-PS1="$ccGREEN\u@\h$ccLIGHTGRAY:$ccYELLOW\$(getCurrentGitBranch)$ccBLUE\w$ccLIGHTGRAY\$ "
+case $PROMPT_THEME in
+	1) # default
+		PS1="$ccGREEN\u@\h$ccLIGHTGRAY:$ccYELLOW\$(getCurrentGitBranch)$ccBLUE\w$ccLIGHTGRAY\$ ";;
+	2) # france
+		PS1="$ccRED\u@\h$ccLIGHTGRAY:$ccWHITE\$(getCurrentGitBranch)$ccBLUE\w$ccLIGHTGRAY\$ ";;
+	3) # midnight
+		PS1="$ccBLUE\u@\h$ccLIGHTGRAY:$ccTURQUOISE\$(getCurrentGitBranch)$ccPURPLE\w$ccLIGHTGRAY\$ ";;
+	4) # italy
+		PS1="$ccRED\u@\h$ccLIGHTGRAY:$ccWHITE\$(getCurrentGitBranch)$ccGREEN\w$ccLIGHTGRAY\$ ";;
+esac
+
 # If this is an xterm set the title to user@host:dir
 case "$TERM" in
 xterm*|rxvt*)

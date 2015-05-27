@@ -3,3 +3,4 @@ dev:mypassword
 admin:admin123
 env1:development
 env2:DEVELOPMENT
+theme:1
