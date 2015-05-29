@@ -1,4 +1,7 @@
 #!/bin/bash
+scriptDir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+cd $scriptDir
+
 . vars
 
 include="source $currentDir/all-about-that-bash.sh"
@@ -16,14 +19,28 @@ if [ $isIncluded -gt 0 ]; then
 	exit 1
 fi
 
+# install xclip
+echo "Installing xclip..."
+which xclip >/dev/null 2>&1
+if [ $? -eq 0 ]; then
+	echo "completed."
+else
+	sudo apt-get install xclip
+	echo "completed."
+fi
+
+# choose prompt theme
 echo -e "Which prompt do you prefer ?"
 ask-prompt
-read -p "Choose [1..4] : "
+read -p "Choose [1/2] : "
 change-prompt $REPLY
 
+# include bash in bashrc
 echo -e "\n${include}" >> $HOME/.bashrc
 echo -e "Setup complete.
 * Modify ${cTURQUOISE}term${cLIGHTGRAY} file to match your own needs
 * Please restart your terminal to take effect
 * And type 'helpme' to start
 Good luck ${uSMILE}"
+
+cd -

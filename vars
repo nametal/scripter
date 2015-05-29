@@ -104,17 +104,11 @@ ask-prompt() {
 	
 	# default
 	prompt1="$cGREEN$dummyUser@$dummyHost$cLIGHTGRAY:$cYELLOW$dummyBranch$cBLUE$dummyDir$cLIGHTGRAY\$ "
-	# france
-	prompt2="$cRED$dummyUser@$dummyHost$cLIGHTGRAY:$cWHITE$dummyBranch$cBLUE$dummyDir$cLIGHTGRAY\$ "
 	# midnight
-	prompt3="$cBLUE$dummyUser@$dummyHost$cLIGHTGRAY:$cTURQUOISE$dummyBranch$cPURPLE$dummyDir$cLIGHTGRAY\$ "
-	# italy
-	prompt4="$cRED$dummyUser@$dummyHost$cLIGHTGRAY:$cWHITE$dummyBranch$cGREEN$dummyDir$cLIGHTGRAY\$ "	
+	prompt2="$cBLUE$dummyUser@$dummyHost$cLIGHTGRAY:$cTURQUOISE$dummyBranch$cPURPLE$dummyDir$cLIGHTGRAY\$ "
 
-	echo -e "1 Default  \n\t${prompt1}"
-	echo -e "2 France   \n\t${prompt2}"
-	echo -e "3 Midnight \n\t${prompt3}"
-	echo -e "4 Italy    \n\t${prompt4}"
+	echo -e "(1) Default  \t${prompt1}"
+	echo -e "(2) Midnight \t${prompt2}"
 }
 
 change-prompt() {	

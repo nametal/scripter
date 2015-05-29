@@ -77,7 +77,7 @@ db.auth('${MONGO_USER}','${MONGO_PWD}')
 ${SLAVEOK}"
 	echo -e "$CMDS" | xclip -sel c
 	echo "after ssh logged in, please paste (Ctrl+Shift+V)"
-	read -p "press any key to continue..."
+	read -s -n1 -p "press any key to continue..."
 
 	# 2. ssh to remote machine
 	ssh mongo$1
@@ -182,7 +182,7 @@ qkill() {
 	fi
 
 	# be careful, it is dangerous!
-	read -p "PID ${PID}, press any key to kill..."
+	read -p "PID ${PID}, press Enter to kill..."
 	kill $PID
 	wew
 }
@@ -254,7 +254,7 @@ exit
 ${logCommand}"
 	echo -e "$CMDS" | xclip -sel c
 	echo "after ssh logged in, please paste (Ctrl+Shift+V)"
-	read -p "press any key to continue..."
+	read -s -n1 -p "press any key to continue..."
 
 	# 2. ssh to remote machine
 	ssh $1
@@ -290,12 +290,8 @@ PROMPT_THEME=$(getTerm theme)
 case $PROMPT_THEME in
 	1) # default
 		PS1="$ccGREEN\u@\h$ccLIGHTGRAY:$ccYELLOW\$(getCurrentGitBranch)$ccBLUE\w$ccLIGHTGRAY\$ ";;
-	2) # france
-		PS1="$ccRED\u@\h$ccLIGHTGRAY:$ccWHITE\$(getCurrentGitBranch)$ccBLUE\w$ccLIGHTGRAY\$ ";;
-	3) # midnight
+	2) # midnight
 		PS1="$ccBLUE\u@\h$ccLIGHTGRAY:$ccTURQUOISE\$(getCurrentGitBranch)$ccPURPLE\w$ccLIGHTGRAY\$ ";;
-	4) # italy
-		PS1="$ccRED\u@\h$ccLIGHTGRAY:$ccWHITE\$(getCurrentGitBranch)$ccGREEN\w$ccLIGHTGRAY\$ ";;
 esac
 
 # If this is an xterm set the title to user@host:dir
