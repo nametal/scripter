@@ -12,8 +12,9 @@ calm down, here are some tools for you... ${uSMILE}
   to-mongo               - connect to remote mongo machine directly (automatic)
   ssh-whoami             - get whoami status from remote machine by service name
   qkill                  - quick kill process by service name
-  qpush                  - quick push binary to repo
+  qpush                  - quick push binary to repo (batch-able)
   qpull                  - quick pull binary from repo to a remote server using ssh (semi-automatic)
+  qlist                  - get list of running services
   unlock-keyboard        - resolve idea \"cannot type\" problem
   getPortFromService     - self explanatory
   wew                    - check last command return status
@@ -187,6 +188,19 @@ qkill() {
 	wew
 }
 
+# get list of running services
+qlist() {
+	srvs=("tv" "tap" "frs" "fb" "hinv" "pg" "ne")
+	for s in "${srvs[@]}"
+	do
+		local PORT=$(getPortFromService $s)
+		local cSrv=$(ps aux | grep -v grep | grep -v artifactory | grep "jar start.jar" | grep -c $PORT)
+		if [ $cSrv -gt 0 ]; then
+			echo "$s"
+		fi
+	done
+}
+
 # getServiceFromPort() {
 	# TODO, use sed
 	# echo 'dummy'
@@ -203,27 +217,47 @@ getCurrentBuildVersion() {
 	fi
 }
 
-# quick push binary to repo
+# quick push binary to repo (batch-able)
 qpush() {
 	if [ -z "$2" ]; then
-		echo "usage: qpush <service_name> <version>"
-		echo "  eg. qpush frs fixAirportInfo"
+		echo "usage: qpush <version> <s1> [<s2> <s3> ...]"
+		echo "  version       build version, eg: fixAirportInfo"
+		echo "  s1, s2, ..    services name, eg: tv fetcher tap"
+		echo "eg. qpush fixAirportInfo tv fetcher tap"
 		return 1
 	fi
 
-	local newVersion=$(getCurrentBuildVersion $2)
+	local newVersion=$(getCurrentBuildVersion $1)
+	pushd ~/tools/repository/deploy-scripts	> /dev/null
 
-	pushd ~/tools/repository/deploy-scripts	
-	if [ $1 = "fetcher" ]; then
-		./push-fetcher.sh ${newVersion} repo01
-		# echo "./push-fetcher.sh ${2} repo01"
-	else
-		./push.sh $1 ${newVersion} repo01 
-		# echo "./push.sh ${1} ${2} repo01 "
-	fi
-	popd
+	local srvs=
 
-	echo -e "\nNew Version: ${cTURQUOISE}${newVersion}\n"
+	arr=("$@")
+	for x in ${!arr[@]}
+	do
+		# echo "$x ${arr[$x]}"s
+		if [ $x -gt 0 ]; then
+			echo -e "[${x}] Pushing ${cGREEN}${arr[$x]}${cLIGHTGRAY}..."
+			if [ ${arr[$x]} = "fetcher" ]; then
+				./push-fetcher.sh ${newVersion} repo01
+				# echo "./push-fetcher.sh ${newVersion} repo01"
+				srvs="${srvs} ${arr[$x]}"
+			else
+				local PORT=$(getPortFromService ${arr[$x]})
+				if [ -z "$PORT" ]; then
+					echo "Service '${arr[$x]}' not found. Skipped"
+				else
+					./push.sh ${arr[$x]} ${newVersion} repo01
+					# echo "./push.sh ${arr[$x]} ${newVersion} repo01"
+					srvs="${srvs} ${arr[$x]}"
+				fi
+			fi
+		fi
+	done
+	
+	popd > /dev/null
+	echo -e "\nServices   :${cGREEN}${srvs}${cLIGHTGRAY}"
+	echo -e "New Version: ${cTURQUOISE}${newVersion}\n"
 }
 
 # quick pull binary from repo to a remote server using ssh (semi-automatic)
