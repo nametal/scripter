@@ -230,7 +230,8 @@ qpush() {
 	local newVersion=$(getCurrentBuildVersion $1)
 	pushd ~/tools/repository/deploy-scripts	> /dev/null
 
-	local srvs=
+	local pushed=
+	local skipped=
 
 	arr=("$@")
 	for x in ${!arr[@]}
@@ -241,23 +242,26 @@ qpush() {
 			if [ ${arr[$x]} = "fetcher" ]; then
 				./push-fetcher.sh ${newVersion} repo01
 				# echo "./push-fetcher.sh ${newVersion} repo01"
-				srvs="${srvs} ${arr[$x]}"
+				pushed="${pushed} ${arr[$x]}"
 			else
 				local PORT=$(getPortFromService ${arr[$x]})
 				if [ -z "$PORT" ]; then
+					skipped="${skipped} ${arr[$x]}"
 					echo "Service '${arr[$x]}' not found. Skipped"
 				else
 					./push.sh ${arr[$x]} ${newVersion} repo01
 					# echo "./push.sh ${arr[$x]} ${newVersion} repo01"
-					srvs="${srvs} ${arr[$x]}"
+					pushed="${pushed} ${arr[$x]}"
 				fi
 			fi
 		fi
 	done
 	
 	popd > /dev/null
-	echo -e "\nServices   :${cGREEN}${srvs}${cLIGHTGRAY}"
-	echo -e "New Version: ${cTURQUOISE}${newVersion}\n"
+	echo
+	echo -e "Skipped services  :${cRED}${skipped}${cLIGHTGRAY}"
+	echo -e "Pushed services   :${cGREEN}${pushed}${cLIGHTGRAY}"
+	echo -e "New Version       : ${cTURQUOISE}${newVersion}\n"
 }
 
 # quick pull binary from repo to a remote server using ssh (semi-automatic)

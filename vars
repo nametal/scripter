@@ -9,25 +9,43 @@ uCHECK='\u2611'
 uWRONG='\u2612'
 
 # color constants
-cDARKGRAY="\e[01;30m"
-cRED="\e[01;31m"
-cGREEN="\e[01;32m"
-cYELLOW="\e[01;33m"
-cBLUE="\e[01;34m"
-cPURPLE="\e[01;35m"
-cTURQUOISE="\e[01;36m"
-cWHITE="\e[01;37m"
+clDARKGRAY="\e[0;30m"
+clRED="\e[0;31m"
+clGREEN="\e[0;32m"
+clYELLOW="\e[0;33m"
+clBLUE="\e[0;34m"
+clPURPLE="\e[0;35m"
+clTURQUOISE="\e[0;36m"
+clWHITE="\e[0;37m"
+# bold color
+cDARKGRAY="\e[1;30m"
+cRED="\e[1;31m"
+cGREEN="\e[1;32m"
+cYELLOW="\e[1;33m"
+cBLUE="\e[1;34m"
+cPURPLE="\e[1;35m"
+cTURQUOISE="\e[1;36m"
+cWHITE="\e[1;37m"
 cLIGHTGRAY="\e[00m"
 
 # color with non-printing char (to correctly calculate word-wrapping)
-ccDARKGRAY='\[\e[01;30m\]'
-ccRED='\[\e[01;31m\]'
-ccGREEN='\[\e[01;32m\]'
-ccYELLOW='\[\e[01;33m\]'
-ccBLUE='\[\e[01;34m\]'
-ccPURPLE='\[\e[01;35m\]'
-ccTURQUOISE='\[\e[01;36m\]'
-ccWHITE='\[\e[01;37m\]'
+cclDARKGRAY='\[\e[0;30m\]'
+cclRED='\[\e[0;31m\]'
+cclGREEN='\[\e[0;32m\]'
+cclYELLOW='\[\e[0;33m\]'
+cclBLUE='\[\e[0;34m\]'
+cclPURPLE='\[\e[0;35m\]'
+cclTURQUOISE='\[\e[0;36m\]'
+cclWHITE='\[\e[0;37m\]'
+# bold color
+ccDARKGRAY='\[\e[1;30m\]'
+ccRED='\[\e[1;31m\]'
+ccGREEN='\[\e[1;32m\]'
+ccYELLOW='\[\e[1;33m\]'
+ccBLUE='\[\e[1;34m\]'
+ccPURPLE='\[\e[1;35m\]'
+ccTURQUOISE='\[\e[1;36m\]'
+ccWHITE='\[\e[1;37m\]'
 ccLIGHTGRAY='\[\e[00m\]'
 
 # background color
