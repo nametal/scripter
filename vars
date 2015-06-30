@@ -125,10 +125,40 @@ ask-prompt() {
 	# midnight
 	prompt2="$cBLUE$dummyUser@$dummyHost$cLIGHTGRAY:$cTURQUOISE$dummyBranch$cPURPLE$dummyDir$cLIGHTGRAY\$ "
 
-	echo -e "(1) Default  \t${prompt1}"
-	echo -e "(2) Midnight \t${prompt2}"
+	echo -e "(1) Greenish  \t${prompt1}"
+	echo -e "(2) Blueish   \t${prompt2}"
 }
 
-change-prompt() {	
+change-theme() {	
 	sed -i -re "s/(theme:)[^:]*$/\1${1}/" $currentDir/term
+	coloring-tab $1
+}
+
+coloring-tab() {
+	case $1 in
+		1) # greenish
+			local colorTheme0="8AE828"
+			local colorTheme1="69C810";;
+		2) # blueish
+			local colorTheme0="35C786"
+			local colorTheme1="2BB";;
+		*) return 1;;
+	esac
+
+	local gtkCss="
+TerminalWindow .notebook tab:active {
+	background-image: -gtk-gradient (linear, left top, right bottom,
+	                                 from (shade (#${colorTheme0}, 1.5)),
+	                                 to (shade (#${colorTheme1}, 1.0)));
+	
+}
+	"
+
+	local gtkPath="${HOME}/.config/gtk-3.0/"
+	if [ ! -f ${gtkPath} ]; then
+		mkdir -p ${gtkPath}
+		touch ${gtkPath}/gtk.css
+	fi
+
+	echo -e ${gtkCss} > ${gtkPath}/gtk.css
 }

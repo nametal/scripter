@@ -155,8 +155,26 @@ getPortFromService() {
 		"frs") local PORT=$FRS_LISTEN_PORT;;
 		"fb") local PORT=$FB_LISTEN_PORT;;
 		"hinv") local PORT=$HOTEL_INV_LISTEN_PORT;;
+		"hnet") local PORT=$HNET_LISTEN_PORT;;
+		"hdist") local PORT=$HOTEL_DIST_LISTEN_PORT;;
 		"pg") local PORT=$PG_LISTEN_PORT;;
 		"ne") local PORT=$NAMED_ENTITY_LISTEN_PORT;;
+		"nei") local PORT=$NAMED_ENTITY_INDEX_LISTEN_PORT;;
+		"erp") local PORT=$ERP_LISTEN_PORT;;
+		"erpfe") local PORT=$ERPFE_LISTEN_PORT;;
+		"ems") local PORT=$ETL_MANAGER_SERVICE_LISTEN_PORT;;
+		"ews") local PORT=$ETL_WORKER_SERVICE_LISTEN_PORT;;
+		"journal") local PORT=$JOURNAL_LISTEN_PORT;;
+		"mp") local PORT=$MARKETING_PLATFORM_LISTEN_PORT;;
+		"mps") local PORT=$MARKETING_SERVICE_LISTEN_PORT;;
+		"ffx") local PORT=$FFX_LISTEN_PORT;;
+		"cops") local PORT=$COPS_SERVICE_LISTEN_PORT;;
+		"copsfe") local PORT=$COPSFE_LISTEN_PORT;;
+		"fapi") local PORT=$FAPI_LISTEN_PORT;;
+		"bi") local PORT=$BI_LISTEN_PORT;;
+		"bis") local PORT=$BIS_LISTEN_PORT;;
+		"monitor") local PORT=$MONITOR_LISTEN_PORT;;
+		"data-infra") local PORT=$DATA_INFRA_LISTEN_PORT;;
 		*) return 1;;
 	esac
 	echo $PORT

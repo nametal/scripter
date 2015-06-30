@@ -23,17 +23,17 @@ fi
 echo "Installing xclip..."
 which xclip >/dev/null 2>&1
 if [ $? -eq 0 ]; then
-	echo "completed."
+	echo "Already installed."
 else
 	sudo apt-get install xclip
 	echo "completed."
 fi
 
 # choose prompt theme
-echo -e "Which prompt do you prefer ?"
+echo -e "Which color theme do you prefer ?"
 ask-prompt
 read -p "Choose [1/2] : "
-change-prompt $REPLY
+change-theme $REPLY
 
 # include bash in bashrc
 echo -e "\n${include}" >> $HOME/.bashrc
