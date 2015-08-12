@@ -10,13 +10,11 @@ calm down, here are some tools for you... ${uSMILE}
   
   ssh-mongo              - connect to remote mongo machine using ssh (semi-automatic)
   to-mongo               - connect to remote mongo machine directly (automatic)
-  ssh-whoami             - get whoami status from remote machine by service name
   qkill                  - quick kill process by service name
   qpush                  - quick push binary to repo (batch-able)
   qpull                  - quick pull binary from repo to a remote server using ssh (semi-automatic)
   qlist                  - get list of running services
   unlock-keyboard        - resolve idea \"cannot type\" problem
-  getPortFromService     - self explanatory
   wew                    - check last command return status
 "
 }
@@ -114,28 +112,6 @@ to-mongo() {
 	mongo --host mongo$1 --port 27017 -u $MONGO_USER -p $MONGO_PWD $2
 }
 
-# get whoami status from remote machine by service name
-ssh-whoami() {
-	if [ -z "$2" ]; then
-		echo "usage: ssh-whoami <machine_name> <service_name>"
-		echo "  machine_name    remote machine, eg. frs15"
-		echo "  service_name    eg. tap, frs, fetcher"
-		return 1
-	fi
-
-	if [ $2 = "fetcher" ]; then
-		ssh $1 "cat /var/$(getTerm env1)/fetcher/build.properties"
-		return 0
-	fi
-
-	local PORT=$(getPortFromService $2)
-	if [ -z "$PORT" ]; then
-		echo "service '${2}' not found"
-		return 2
-	fi
-	ssh $1 "curl localhost:${PORT}/whoami" | python -m json.tool
-}
-
 tes() {
 	echo -e "${uFROWN}${uSMILE}"
 	case $1 in
@@ -146,49 +122,16 @@ tes() {
 	esac
 }
 
-# self explanatory
-getPortFromService() {
-	case "$1" in
-		"tv") local genPort=$(getTerm env2)COM_LISTEN_PORT
-			  local PORT=${!genPort};;
-		"tap") local PORT=$TAP_LISTEN_PORT;;
-		"frs") local PORT=$FRS_LISTEN_PORT;;
-		"fb") local PORT=$FB_LISTEN_PORT;;
-		"hinv") local PORT=$HOTEL_INV_LISTEN_PORT;;
-		"hnet") local PORT=$HNET_LISTEN_PORT;;
-		"hdist") local PORT=$HOTEL_DIST_LISTEN_PORT;;
-		"pg") local PORT=$PG_LISTEN_PORT;;
-		"ne") local PORT=$NAMED_ENTITY_LISTEN_PORT;;
-		"nei") local PORT=$NAMED_ENTITY_INDEX_LISTEN_PORT;;
-		"erp") local PORT=$ERP_LISTEN_PORT;;
-		"erpfe") local PORT=$ERPFE_LISTEN_PORT;;
-		"ems") local PORT=$ETL_MANAGER_SERVICE_LISTEN_PORT;;
-		"ews") local PORT=$ETL_WORKER_SERVICE_LISTEN_PORT;;
-		"journal") local PORT=$JOURNAL_LISTEN_PORT;;
-		"mp") local PORT=$MARKETING_PLATFORM_LISTEN_PORT;;
-		"mps") local PORT=$MARKETING_SERVICE_LISTEN_PORT;;
-		"ffx") local PORT=$FFX_LISTEN_PORT;;
-		"cops") local PORT=$COPS_SERVICE_LISTEN_PORT;;
-		"copsfe") local PORT=$COPSFE_LISTEN_PORT;;
-		"fapi") local PORT=$FAPI_LISTEN_PORT;;
-		"bi") local PORT=$BI_LISTEN_PORT;;
-		"bis") local PORT=$BIS_LISTEN_PORT;;
-		"monitor") local PORT=$MONITOR_LISTEN_PORT;;
-		"data-infra") local PORT=$DATA_INFRA_LISTEN_PORT;;
-		*) return 1;;
-	esac
-	echo $PORT
-}
-
 # quick kill process by service name
 qkill() {
 	if [ -z "$1" ]; then
-		echo "usage: qkill <service_name>"
+		echo "usage: qkill <service_name> [-f]"
 		echo "  service_name   eg. tv, frs, tap"
+		echo "  -f             force kill"
 		return 1
 	fi
 
-	local PORT=$(getPortFromService $1)
+	local PORT=$(portof $1)
 	if [ -z "$PORT" ]; then
 		echo "service '${1}' not found"
 		return 2
@@ -200,18 +143,26 @@ qkill() {
 		return 3
 	fi
 
+	if [ "$2" == "-f" ]; then
+		forceKill="-9"
+	fi
+
 	# be careful, it is dangerous!
 	read -p "PID ${PID}, press Enter to kill..."
-	kill $PID
+	kill $forceKill $PID
 	wew
 }
 
 # get list of running services
 qlist() {
-	srvs=("tv" "tap" "frs" "fb" "hinv" "pg" "ne")
+	type allservices > /dev/null
+	if [ $? -ne 0 ]; then
+		return 1;
+	fi
+	local srvs=($(allservices))
 	for s in "${srvs[@]}"
-	do
-		local PORT=$(getPortFromService $s)
+	do	
+		local PORT=$(portof $s)
 		local cSrv=$(ps aux | grep -v grep | grep -v artifactory | grep "jar start.jar" | grep -c $PORT)
 		if [ $cSrv -gt 0 ]; then
 			echo "$s"
@@ -262,7 +213,7 @@ qpush() {
 				# echo "./push-fetcher.sh ${newVersion} repo01"
 				pushed="${pushed} ${arr[$x]}"
 			else
-				local PORT=$(getPortFromService ${arr[$x]})
+				local PORT=$(portof ${arr[$x]})
 				if [ -z "$PORT" ]; then
 					skipped="${skipped} ${arr[$x]}"
 					echo "Service '${arr[$x]}' not found. Skipped"
@@ -274,6 +225,13 @@ qpush() {
 			fi
 		fi
 	done
+
+	if [ -z "$skipped" ]; then
+		skipped=" -"
+	fi
+	if [ -z "$pushed" ]; then
+		pushed=" -"
+	fi
 	
 	popd > /dev/null
 	echo
@@ -339,6 +297,10 @@ getTerm() {
 	fi
 
 	echo $term
+}
+
+listAllPorts() {
+	set -o posix; set | grep PORT
 }
 
 PROMPT_THEME=$(getTerm theme)
