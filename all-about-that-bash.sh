@@ -10,12 +10,13 @@ calm down, here are some tools for you... ${uSMILE}
   
   ssh-mongo              - connect to remote mongo machine using ssh (semi-automatic)
   to-mongo               - connect to remote mongo machine directly (automatic)
-  qkill                  - quick kill process by service name
+  qlist                  - quick get list of running services
   qpush                  - quick push binary to repo (batch-able)
   qpull                  - quick pull binary from repo to a remote server using ssh (semi-automatic)
-  qlist                  - get list of running services
+  qkill                  - quick kill process by service name
   unlock-keyboard        - resolve idea \"cannot type\" problem
   wew                    - check last command return status
+  exe (beta)             - run any command with elapsed time information
 "
 }
 
@@ -75,7 +76,7 @@ use ${2}
 db.auth('${MONGO_USER}','${MONGO_PWD}')
 ${SLAVEOK}"
 	echo -e "$CMDS" | xclip -sel c
-	echo "after ssh logged in, please paste (Ctrl+Shift+V)"
+	echo "once logged in, please paste (Ctrl+Shift+V)"
 	read -s -n1 -p "press any key to continue..."
 
 	# 2. ssh to remote machine
@@ -159,27 +160,24 @@ qlist() {
 	if [ $? -ne 0 ]; then
 		return 1;
 	fi
-	local srvs=($(allservices))
-	for s in "${srvs[@]}"
-	do	
-		local PORT=$(portof $s)
-		local cSrv=$(ps aux | grep -v grep | grep -v artifactory | grep "jar start.jar" | grep -c $PORT)
-		if [ $cSrv -gt 0 ]; then
-			echo "$s"
-		fi
+
+	local strCommand="ps aux | grep -v grep | grep -v artifactory | grep 'jetty-deploy' | grep -v sed | sed -e 's#.*jetty-deploy-\(\)#\1#' | cut -d '.' -f1"
+	if [ -n "$1" ]; then
+		strCommand="ssh ${1} \"${strCommand}\""
+	fi
+	local runningPorts=($(eval $strCommand))
+	for p in "${runningPorts[@]}"
+	do
+		local servicename=$(serviceof $p)
+		echo $servicename
 	done
 }
-
-# getServiceFromPort() {
-	# TODO, use sed
-	# echo 'dummy'
-# }
 
 getCurrentBuildVersion() {
 	if [ -d ".git" ]; then
 		local branchName=$(git branch | grep '*' | cut -d'/' -f2 | cut -d'*' -f2)
 		local hashCode=$(git log --format="%h" | head -1)
-		echo $branchName.$hashCode-$1
+		echo $branchName.$hashCode-$1-$2
 	else
 		echo "this is not a git repository"
 		return 1
@@ -188,15 +186,16 @@ getCurrentBuildVersion() {
 
 # quick push binary to repo (batch-able)
 qpush() {
-	if [ -z "$2" ]; then
-		echo "usage: qpush <version> <s1> [<s2> <s3> ...]"
-		echo "  version       build version, eg: fixAirportInfo"
+	if [ -z "$3" ]; then
+		echo "usage: qpush <target> <comment> <s1> [<s2> <s3> ...]"
+		echo "  target        target machine, eg: staging05"
+		echo "  comment       comment on version, eg: fixAirportInfo"
 		echo "  s1, s2, ..    services name, eg: tv fetcher tap"
 		echo "eg. qpush fixAirportInfo tv fetcher tap"
 		return 1
 	fi
 
-	local newVersion=$(getCurrentBuildVersion $1)
+	local newVersion=$(getCurrentBuildVersion $1 $2)
 	pushd ~/tools/repository/deploy-scripts	> /dev/null
 
 	local pushed=
@@ -206,7 +205,7 @@ qpush() {
 	for x in ${!arr[@]}
 	do
 		# echo "$x ${arr[$x]}"s
-		if [ $x -gt 0 ]; then
+		if [ $x -gt 1 ]; then # parameter #3 and more
 			echo -e "[${x}] Pushing ${cGREEN}${arr[$x]}${cLIGHTGRAY}..."
 			if [ ${arr[$x]} = "fetcher" ]; then
 				./push-fetcher.sh ${newVersion} repo01
@@ -246,7 +245,7 @@ qpull() {
 		echo "usage: qpull <machine_name> <service_name> <version>"
 		echo "  machine_name    remote machine, eg. staging04"
 		echo "  service_name    eg. tap, frs, fetcher"
-		echo "  version         eg. fixAirportInfo"
+		echo "  version         eg. develop.b8c3b2f-staging01-fixAirportInfo"
 		return 1
 	fi
 
@@ -267,7 +266,7 @@ ${pullCommand}
 exit
 ${logCommand}"
 	echo -e "$CMDS" | xclip -sel c
-	echo "after ssh logged in, please paste (Ctrl+Shift+V)"
+	echo "once logged in, please paste (Ctrl+Shift+V)"
 	read -s -n1 -p "press any key to continue..."
 
 	# 2. ssh to remote machine
@@ -301,6 +300,32 @@ getTerm() {
 
 listAllPorts() {
 	set -o posix; set | grep PORT
+}
+
+exe() {
+	if [ -z "$1" ]; then
+		echo "usage: exe <any command>"
+		return 1
+	fi
+
+	startTime=`date +%N`
+	echo $startTime
+	# TODO :
+	# - optimize so can run pipe command
+	# - fix invalid timelapse (eg. when ssh)
+
+	alias $@ &>/dev/null
+	if [ $? -eq 0 ]; then
+		# if command is an alias, then run the alias
+		local xx=$(alias $@ | cut -d = -f2 | cut -d \' -f2)
+		eval $xx
+	else
+		$@
+	fi
+	endTime=`date +%N`
+	echo $endTime
+  	elapsedTime=`expr \( $endTime - $startTime \) / 1000000`
+  	echo -e "${cYELLOW}${uCHECK} ${elapsedTime} ms"
 }
 
 PROMPT_THEME=$(getTerm theme)
