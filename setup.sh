@@ -20,7 +20,7 @@ if [ $isIncluded -gt 0 ]; then
 fi
 
 # install xclip
-echo "Installing xclip..."
+echo -en "Installing xclip...${cTURQUOISE}"
 which xclip >/dev/null 2>&1
 if [ $? -eq 0 ]; then
 	echo "Already installed."
@@ -28,6 +28,7 @@ else
 	sudo apt-get install xclip
 	echo "completed."
 fi
+echo -e "${cLIGHTGRAY}"
 
 # choose prompt theme
 echo -e "Which color theme do you prefer ?"
@@ -38,9 +39,9 @@ change-theme $REPLY
 # include bash in bashrc
 echo -e "\n${include}" >> $HOME/.bashrc
 echo -e "Setup complete.
-* Modify ${cTURQUOISE}term${cLIGHTGRAY} file to match your own needs
-* Please restart your terminal to take effect
+* ${cRED}IMPORTANT${cLIGHTGRAY} : make sure to modify ${cTURQUOISE}${scriptDir}/term${cLIGHTGRAY} to set up environment
+* Please restart your terminal (or open new tab) to take effect
 * And type 'helpme' to start
 Good luck ${uSMILE}"
 
-cd -
+cd - &>/dev/null

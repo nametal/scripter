@@ -10,10 +10,10 @@ calm down, here are some tools for you... ${uSMILE}
   
   ssh-mongo              - connect to remote mongo machine using ssh (semi-automatic)
   to-mongo               - connect to remote mongo machine directly (automatic)
-  qlist                  - quick get list of running services
+  qlist                  - quick get list of running $(getTerm env1) services
   qpush                  - quick push binary to repo (batch-able)
   qpull                  - quick pull binary from repo to a remote server using ssh (semi-automatic)
-  qkill                  - quick kill process by service name
+  qkill                  - quick kill process by $(getTerm env1) service name
   unlock-keyboard        - resolve idea \"cannot type\" problem
   wew                    - check last command return status
   exe (beta)             - run any command with elapsed time information
@@ -128,7 +128,7 @@ qkill() {
 	if [ -z "$1" ]; then
 		echo "usage: qkill <service_name> [-f]"
 		echo "  service_name   eg. tv, frs, tap"
-		echo "  -f             force kill"
+		echo "  -n             disable force killing"
 		return 1
 	fi
 
@@ -144,8 +144,9 @@ qkill() {
 		return 3
 	fi
 
-	if [ "$2" == "-f" ]; then
-		forceKill="-9"
+	forceKill="-9"
+	if [ "$2" == "-n" ]; then
+		forceKill=
 	fi
 
 	# be careful, it is dangerous!
@@ -202,14 +203,15 @@ qpush() {
 	local skipped=
 
 	arr=("$@")
+	ctr=1
 	for x in ${!arr[@]}
 	do
 		# echo "$x ${arr[$x]}"s
 		if [ $x -gt 1 ]; then # parameter #3 and more
-			echo -e "[${x}] Pushing ${cGREEN}${arr[$x]}${cLIGHTGRAY}..."
+			echo -e "[$((ctr++))] Pushing ${cGREEN}${arr[$x]}${cLIGHTGRAY}..."
 			if [ ${arr[$x]} = "fetcher" ]; then
 				./push-fetcher.sh ${newVersion} repo01
-				# echo "./push-fetcher.sh ${newVersion} repo01"
+				# echo "./push-fetcher.sh ${newVersion} repo01" # debug-mode
 				pushed="${pushed} ${arr[$x]}"
 			else
 				local PORT=$(portof ${arr[$x]})
@@ -218,7 +220,7 @@ qpush() {
 					echo "Service '${arr[$x]}' not found. Skipped"
 				else
 					./push.sh ${arr[$x]} ${newVersion} repo01
-					# echo "./push.sh ${arr[$x]} ${newVersion} repo01"
+					# echo "./push.sh ${arr[$x]} ${newVersion} repo01" # debug-mode
 					pushed="${pushed} ${arr[$x]}"
 				fi
 			fi
@@ -234,9 +236,11 @@ qpush() {
 	
 	popd > /dev/null
 	echo
-	echo -e "Skipped services  :${cRED}${skipped}${cLIGHTGRAY}"
-	echo -e "Pushed services   :${cGREEN}${pushed}${cLIGHTGRAY}"
-	echo -e "New Version       : ${cTURQUOISE}${newVersion}\n"
+	echo -e "Summary"
+	echo -e "-------"
+	echo -e "Skipped  :${cRED}${skipped}${cLIGHTGRAY}"
+	echo -e "Pushed   :${cGREEN}${pushed}${cLIGHTGRAY}"
+	echo -e "Version  : ${cTURQUOISE}${newVersion}\n"
 }
 
 # quick pull binary from repo to a remote server using ssh (semi-automatic)
