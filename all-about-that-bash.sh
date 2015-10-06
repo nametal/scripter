@@ -17,6 +17,13 @@ calm down, here are some tools for you... ${uSMILE}
   unlock-keyboard        - resolve idea \"cannot type\" problem
   wew                    - check last command return status
   exe (beta)             - run any command with elapsed time information
+
+  ssh-whoami             - get whoami status from $(getTerm env1) service name on target machine
+  portof                 - get port number from $(getTerm env1) service name
+  serviceof              - get $(getTerm env1) service name from port number
+  allservices            - list all $(getTerm env1) services
+
+tips: how to use? try one of those command by run it without parameter
 "
 }
 
@@ -157,13 +164,20 @@ qkill() {
 
 # get list of running services
 qlist() {
+	if [ -z "$1" ]; then
+		echo "usage: qlist <target>"
+		echo "  target    target machine, eg: localhost, staging05"
+		echo "eg. qlist staging05"
+		return 1
+	fi
+
 	type allservices > /dev/null
 	if [ $? -ne 0 ]; then
 		return 1;
 	fi
 
 	local strCommand="ps aux | grep -v grep | grep -v artifactory | grep 'jetty-deploy' | grep -v sed | sed -e 's#.*jetty-deploy-\(\)#\1#' | cut -d '.' -f1"
-	if [ -n "$1" ]; then
+	if [ "$1" != "localhost" ]; then
 		strCommand="ssh ${1} \"${strCommand}\""
 	fi
 	local runningPorts=($(eval $strCommand))
@@ -246,18 +260,23 @@ qpush() {
 # quick pull binary from repo to a remote server using ssh (semi-automatic)
 qpull() {
 	if [ -z "$3" ]; then
-		echo "usage: qpull <machine_name> <service_name> <version>"
+		echo "usage: qpull <machine_name> <service_name> <version> [gocd]"
 		echo "  machine_name    remote machine, eg. staging04"
 		echo "  service_name    eg. tap, frs, fetcher"
 		echo "  version         eg. develop.b8c3b2f-staging01-fixAirportInfo"
+		echo "  gocd			type gocd if you wanna pull from gocd directory"
 		return 1
 	fi
 
+	if [ "$4" == "gocd" ]; then
+		local gocdDir="/var/traveloka/gocd"
+	fi
+
 	if [ $2 = "fetcher" ]; then
-		local pullCommand="/var/$(getTerm env1)/running/deploy-scripts/remote-pull-fetcher.sh ${3} repo01"
+		local pullCommand="/var/$(getTerm env1)/running/deploy-scripts/remote-pull-fetcher.sh ${3} repo01 ${gocdDir}"
 	else
 		local pullCommand="stop-${2}
-/var/$(getTerm env1)/running/deploy-scripts/remote-pull.sh ${2} ${3} repo01
+/var/$(getTerm env1)/running/deploy-scripts/remote-pull.sh ${2} ${3} repo01 ${gocdDir}
 sleep 3
 start-${2}"
 		local logCommand="sleep 1
