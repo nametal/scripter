@@ -8,6 +8,8 @@ helpme() {
 	echo -e "
 calm down, here are some tools for you... ${uSMILE} 
   
+  qssh                   - ssh to another machine implicitly through ansible
+  ssh-whoami             - get whoami status from $(getTerm env1) service name on target machine
   ssh-mongo              - connect to remote mongo machine using ssh (semi-automatic)
   to-mongo               - connect to remote mongo machine directly (automatic)
   qlist                  - quick get list of running $(getTerm env1) services
@@ -16,15 +18,24 @@ calm down, here are some tools for you... ${uSMILE}
   qkill                  - quick kill process by $(getTerm env1) service name
   unlock-keyboard        - resolve idea \"cannot type\" problem
   wew                    - check last command return status
+  get-millis             - get current time in milliseconds
   exe (beta)             - run any command with elapsed time information
 
-  ssh-whoami             - get whoami status from $(getTerm env1) service name on target machine
   portof                 - get port number from $(getTerm env1) service name
   serviceof              - get $(getTerm env1) service name from port number
   allservices            - list all $(getTerm env1) services
 
 tips: how to use? try one of those command by run it without parameter
 "
+}
+
+qssh() {
+	if [ -z "$1" ]; then
+		echo "usage: ssh <target_machine>"
+		echo "  target_machine   eg. tv, frs, tap"
+		return 1
+	fi
+	ssh -t ansible01 "ssh $1"
 }
 
 # check last command return status
@@ -166,7 +177,7 @@ qkill() {
 qlist() {
 	if [ -z "$1" ]; then
 		echo "usage: qlist <target>"
-		echo "  target    target machine, eg: localhost, staging05"
+		echo "  target    target machine, eg: local, staging05"
 		echo "eg. qlist staging05"
 		return 1
 	fi
@@ -177,9 +188,10 @@ qlist() {
 	fi
 
 	local strCommand="ps aux | grep -v grep | grep -v artifactory | grep 'jetty-deploy' | grep -v sed | sed -e 's#.*jetty-deploy-\(\)#\1#' | cut -d '.' -f1"
-	if [ "$1" != "localhost" ]; then
-		strCommand="ssh ${1} \"${strCommand}\""
+	if [ "$1" != "local" ]; then
+		strCommand="ssh ansible01 'ssh ${1} \"${strCommand}\"'"
 	fi
+
 	local runningPorts=($(eval $strCommand))
 	for p in "${runningPorts[@]}"
 	do
@@ -264,12 +276,12 @@ qpull() {
 		echo "  machine_name    remote machine, eg. staging04"
 		echo "  service_name    eg. tap, frs, fetcher"
 		echo "  version         eg. develop.b8c3b2f-staging01-fixAirportInfo"
-		echo "  gocd			type gocd if you wanna pull from gocd directory"
+		echo "  gocd            type gocd if you wanna pull from gocd directory"
 		return 1
 	fi
 
 	if [ "$4" == "gocd" ]; then
-		local gocdDir="/var/traveloka/gocd"
+		local gocdDir="/var/$(getTerm env1)/gocd"
 	fi
 
 	if [ $2 = "fetcher" ]; then
@@ -349,6 +361,39 @@ exe() {
 	echo $endTime
   	elapsedTime=`expr \( $endTime - $startTime \) / 1000000`
   	echo -e "${cYELLOW}${uCHECK} ${elapsedTime} ms"
+}
+
+get-millis() {
+	date +%s%3N
+}
+
+# get whoami status from remote machine by service name
+ssh-whoami() {
+    if [ -z "$2" ]; then
+        echo "usage: ssh-whoami <machine_name> <service_name>"
+        echo "  machine_name    remote machine, eg. frs15"
+        echo "  service_name    eg. tap, frs, fetcher"
+        return 1
+    fi
+
+    if [ $2 = "fetcher" ]; then
+    	echo $2 | grep -q '[0-9]$'
+    	local thehost=
+    	if [ $? -eq 0 ]; then # if $2 contains number in the end
+    		thehost=$1
+    	else
+    		thehost="$1.$(getTerm env1).com"
+    	fi
+        ssh ansible01 "ansible $thehost -m shell -a 'cat /var/$(getTerm env1)/fetcher/build.properties'"
+        return 0
+    fi
+
+    local PORT=$(portof $2)
+    if [ -z "$PORT" ]; then
+        echo "service '${2}' not found"
+        return 2
+    fi
+    ssh ansible01 "curl $1:${PORT}/whoami" | python -m json.tool
 }
 
 PROMPT_THEME=$(getTerm theme)
