@@ -29,13 +29,31 @@ tips: how to use? try one of those command by run it without parameter
 "
 }
 
+qenc() {
+	if [ -z "$2" ]; then
+		echo "usage: qdec <role> <plaintext>"
+		return 1
+	fi
+	local role=$1
+	shift
+	echo $@ | openssl enc -aes-256-cbc -a -salt -out $DIR/$(getTerm $role)
+}
+
+qdec() {
+	if [ -z "$1" ]; then
+		echo "usage: qdec <role>"
+		return 1
+	fi
+	openssl enc -aes-256-cbc -d -a -in $DIR/$(getTerm $1)
+}
+
 qssh() {
 	if [ -z "$1" ]; then
 		echo "usage: ssh <target_machine>"
 		echo "  target_machine   eg. tv, frs, tap"
 		return 1
 	fi
-	ssh -t ansible01 "ssh $1"
+	ssh -t ansible01 "ssh $@"
 }
 
 # check last command return status
@@ -86,7 +104,7 @@ ssh-mongo() {
 			return 2
 		fi
 	fi
-	local MONGO_PWD=$(getTerm $MONGO_USER)
+	local MONGO_PWD=$(qdec $MONGO_USER)
 
 	# 1. store all mongo commands to clipboard
 	local CMDS="mongo
@@ -98,7 +116,7 @@ ${SLAVEOK}"
 	read -s -n1 -p "press any key to continue..."
 
 	# 2. ssh to remote machine
-	ssh mongo$1
+	qssh mongo$1
 
 	# 3. manual paste (Ctrl+Shift+V) on terminal
 	#    this is why I called it semi-automatic ;p
@@ -126,7 +144,7 @@ to-mongo() {
 			return 2
 		fi
 	fi
-	local MONGO_PWD=$(getTerm $MONGO_USER)
+	local MONGO_PWD=$(qdec $MONGO_USER)
 	
 	mongo --host mongo$1 --port 27017 -u $MONGO_USER -p $MONGO_PWD $2
 }
@@ -189,14 +207,22 @@ qlist() {
 
 	local strCommand="ps aux | grep -v grep | grep -v artifactory | grep 'jetty-deploy' | grep -v sed | sed -e 's#.*jetty-deploy-\(\)#\1#' | cut -d '.' -f1"
 	if [ "$1" != "local" ]; then
-		strCommand="ssh ansible01 'ssh ${1} \"${strCommand}\"'"
+		strCommand="qssh ${1} \"${strCommand}\""
 	fi
 
 	local runningPorts=($(eval $strCommand))
+
 	for p in "${runningPorts[@]}"
 	do
-		local servicename=$(serviceof $p)
-		echo $servicename
+		echo "${p}"
+		# [[ $p =~ ^-?[0-9]+$ ]] # test if p is number
+		# if [ $? -eq 0 ]; then # if $2 contains number in the end
+  #   		echo number
+  #   	else
+  #   		echo not number
+  #   		local servicename=$(serviceof $p)
+		# 	echo $servicename
+    	# fi
 	done
 }
 
