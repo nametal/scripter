@@ -403,12 +403,11 @@ ssh-whoami() {
     fi
 
     if [ $2 = "fetcher" ]; then
-    	echo $2 | grep -q '[0-9]$'
-    	local thehost=
-    	if [ $? -eq 0 ]; then # if $2 contains number in the end
-    		thehost=$1
-    	else
+    	echo $1 | grep -q '[0-9]$'
+    	if [ $? -eq 0 ]; then # if $1 contains number in the end
     		thehost="$1.$(getTerm env1).com"
+    	else
+    		thehost=$1
     	fi
         ssh ansible01 "ansible $thehost -m shell -a 'cat /var/$(getTerm env1)/fetcher/build.properties'"
         return 0
