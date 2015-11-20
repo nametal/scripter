@@ -11,6 +11,7 @@ calm down, here are some tools for you... ${uSMILE}
   qssh                   - quick ssh to another machine (implicitly through ansible)
   ssh-whoami             - get whoami status from $(getTerm env1) service name on target machine
   ssh-mongo              - connect to remote mongo machine using ssh (semi-automatic)
+  git-update             - git combo: fetch-stash-rebase-stash_pop
   qclip                  - quick copy any variable to clipboard
   qkill                  - quick kill process by $(getTerm env1) service name
   get-millis             - get current time in milliseconds
@@ -29,6 +30,10 @@ ${clDARKGRAY}currently disabled commands (under maintenance):
 ${cLIGHTGRAY}
 tips: how to use? try one of those command by run it without parameter
 "
+}
+
+git-update() {
+	git fetch && git stash && git rebase && git stash pop
 }
 
 qclip() {
@@ -431,9 +436,9 @@ PROMPT_THEME=$(getTerm theme)
 # force override coloring prompt
 case $PROMPT_THEME in
 	1) # default
-		PS1="$ccGREEN\u@\h$ccLIGHTGRAY:$ccYELLOW\$(getCurrentGitBranch)$ccBLUE\w$ccLIGHTGRAY\$ ";;
+		PS1="\t $ccYELLOW\$(getCurrentGitBranch)$ccLIGHTGRAY:$ccGREEN\u@\h$ccLIGHTGRAY:$ccBLUE\w$ccLIGHTGRAY\$ ";;
 	2) # midnight
-		PS1="$ccBLUE\u@\h$ccLIGHTGRAY:$ccTURQUOISE\$(getCurrentGitBranch)$ccPURPLE\w$ccLIGHTGRAY\$ ";;
+		PS1="\t $ccTURQUOISE\$(getCurrentGitBranch)$ccLIGHTGRAY:$ccBLUE\u@\h$ccLIGHTGRAY:$ccPURPLE\w$ccLIGHTGRAY\$ ";;
 esac
 
 # If this is an xterm set the title to user@host:dir
