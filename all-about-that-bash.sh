@@ -8,25 +8,31 @@ helpme() {
 	echo -e "
 calm down, here are some tools for you... ${uSMILE} 
   
-  qssh                   - ssh to another machine implicitly through ansible
+  qssh                   - quick ssh to another machine (implicitly through ansible)
   ssh-whoami             - get whoami status from $(getTerm env1) service name on target machine
   ssh-mongo              - connect to remote mongo machine using ssh (semi-automatic)
-  to-mongo               - connect to remote mongo machine directly (automatic)
-  qlist                  - quick get list of running $(getTerm env1) services
-  qpush                  - quick push binary to repo (batch-able)
-  qpull                  - quick pull binary from repo to a remote server using ssh (semi-automatic)
+  qclip                  - quick copy any variable to clipboard
   qkill                  - quick kill process by $(getTerm env1) service name
+  get-millis             - get current time in milliseconds
   unlock-keyboard        - resolve idea \"cannot type\" problem
   wew                    - check last command return status
-  get-millis             - get current time in milliseconds
-  exe (beta)             - run any command with elapsed time information
-
+  
   portof                 - get port number from $(getTerm env1) service name
   serviceof              - get $(getTerm env1) service name from port number
   allservices            - list all $(getTerm env1) services
-
+${clDARKGRAY}currently disabled commands (under maintenance):
+  exe (beta)             - run any command with elapsed time information
+  qlist                  - quick get list of running $(getTerm env1) services
+  to-mongo               - connect to remote mongo machine directly (automatic)
+  qpush                  - quick push binary to repo (batch-able)
+  qpull                  - quick pull binary from repo to a remote server using ssh (semi-automatic)
+${cLIGHTGRAY}
 tips: how to use? try one of those command by run it without parameter
 "
+}
+
+qclip() {
+	echo $1 | xclip -sel c
 }
 
 qenc() {
