@@ -8,7 +8,7 @@ include="source $currentDir/all-about-that-bash.sh"
 isIncluded=$(cat $HOME/.bashrc | grep -c "$include")
 
 if [ $isIncluded -gt 0 ]; then
-	echo "Setup has been completed."
+	echo "This is already installed."
 	read -p "Do you want to uninstall instead? [y/n] "
 	if [[ $REPLY =~ ^[Yy]$ ]]; then
 		lineNum=$(grep -n "$include" $HOME/.bashrc | cut -d : -f 1)
@@ -20,15 +20,12 @@ if [ $isIncluded -gt 0 ]; then
 fi
 
 # install xclip
-echo -en "Installing xclip...${cTURQUOISE}"
 which xclip >/dev/null 2>&1
-if [ $? -eq 0 ]; then
-	echo "Already installed."
-else
+if [ $? -ne 0 ]; then
+	echo -en "Installing xclip...${cTURQUOISE}"
 	sudo apt-get install xclip
-	echo "completed."
+	echo -e "completed.${cLIGHTGRAY}"
 fi
-echo -e "${cLIGHTGRAY}"
 
 # choose prompt theme
 echo -e "Which color theme do you prefer ?"
@@ -38,8 +35,8 @@ change-theme $REPLY
 
 # include bash in bashrc
 echo -e "\n${include}" >> $HOME/.bashrc
-echo -e "Setup complete.
-* ${cRED}IMPORTANT${cLIGHTGRAY} : make sure to modify ${cTURQUOISE}${scriptDir}/term${cLIGHTGRAY} to set up environment
+echo -e "\nSetup complete.
+* ${cRED}IMPORTANT${cLIGHTGRAY} :
 * Please restart your terminal (or open new tab) to take effect
 * And type 'helpme' to start
 Good luck ${uSMILE}"

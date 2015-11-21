@@ -117,13 +117,13 @@ colors-info() {
 ask-prompt() {
 	local dummyUser="user"
 	local dummyHost="my-pc"
-	local dummyBranch="[master]"
+	local dummyBranch="[master]:"
 	local dummyDir="~/scripter"
 	
 	# default
-	prompt1="$cGREEN$dummyUser@$dummyHost$cLIGHTGRAY:$cYELLOW$dummyBranch$cBLUE$dummyDir$cLIGHTGRAY\$ "
+	prompt1="$cYELLOW$dummyBranch$cGREEN$dummyUser@$dummyHost$cLIGHTGRAY:$cBLUE$dummyDir$cLIGHTGRAY\$ "
 	# midnight
-	prompt2="$cBLUE$dummyUser@$dummyHost$cLIGHTGRAY:$cTURQUOISE$dummyBranch$cPURPLE$dummyDir$cLIGHTGRAY\$ "
+	prompt2="$cTURQUOISE$dummyBranch$cBLUE$dummyUser@$dummyHost$cLIGHTGRAY:$cPURPLE$dummyDir$cLIGHTGRAY\$ "
 
 	echo -e "(1) Greenish  \t${prompt1}"
 	echo -e "(2) Blueish   \t${prompt2}"
