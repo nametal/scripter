@@ -11,7 +11,7 @@ calm down, here are some tools for you... ${uSMILE}
   qssh                   - quick ssh to another machine (implicitly through ansible)
   ssh-whoami             - get whoami status from $(getTerm env1) service name on target machine
   ssh-mongo              - connect to remote mongo machine using ssh (semi-automatic)
-  git-update             - git combo: fetch-stash-rebase-stash_pop
+  git-update             - git combo: (stash)-fetch-rebase-(stash_pop)
   qclip                  - quick copy any variable to clipboard
   qkill                  - quick kill process by $(getTerm env1) service name
   get-millis             - get current time in milliseconds
@@ -33,10 +33,21 @@ tips: how to use? try one of those command by run it without parameter
 }
 
 git-update() {
-	git fetch && git stash && git rebase && git stash pop
+	local modifiedFiles=$(git status -uno --porcelain | wc -l)
+	if [ $modifiedFiles -gt 0 ]; then
+		echo "modified files found, stashing first..."
+		git stash && git fetch && git rebase && git stash pop
+	else
+		echo "no modified files, directly fetch & rebase..."
+		git fetch && git rebase
+	fi
 }
 
 qclip() {
+	if [ -z "$1" ]; then
+		echo "usage: qclip <variable>"
+		return 1
+	fi
 	echo $1 | xclip -sel c
 }
 
@@ -58,6 +69,7 @@ qdec() {
 	openssl enc -aes-256-cbc -d -a -in $DIR/$(getTerm $1)
 }
 
+# ssh-ing a machine through ansible
 qssh() {
 	if [ -z "$1" ]; then
 		echo "usage: ssh <target_machine>"
@@ -90,7 +102,7 @@ unlock-keyboard() {
 
 # get current git branch name
 getCurrentGitBranch () {
-  git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/[\1]/'
+  git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/[\1]:/'
 }
 
 # connect to remote mongo machine using ssh
@@ -436,9 +448,9 @@ PROMPT_THEME=$(getTerm theme)
 # force override coloring prompt
 case $PROMPT_THEME in
 	1) # default
-		PS1="\t $ccYELLOW\$(getCurrentGitBranch)$ccLIGHTGRAY:$ccGREEN\u@\h$ccLIGHTGRAY:$ccBLUE\w$ccLIGHTGRAY\$ ";;
+		PS1="\t $ccYELLOW\$(getCurrentGitBranch)$ccGREEN\u@\h$ccLIGHTGRAY:$ccBLUE\w$ccLIGHTGRAY\$ ";;
 	2) # midnight
-		PS1="\t $ccTURQUOISE\$(getCurrentGitBranch)$ccLIGHTGRAY:$ccBLUE\u@\h$ccLIGHTGRAY:$ccPURPLE\w$ccLIGHTGRAY\$ ";;
+		PS1="\t $ccTURQUOISE\$(getCurrentGitBranch)$ccBLUE\u@\h$ccLIGHTGRAY:$ccPURPLE\w$ccLIGHTGRAY\$ ";;
 esac
 
 # If this is an xterm set the title to user@host:dir
