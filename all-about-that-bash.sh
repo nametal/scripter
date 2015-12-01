@@ -32,13 +32,22 @@ tips: how to use? try one of those command by run it without parameter
 }
 
 git-update() {
-	local modifiedFiles=$(git status -uno --porcelain | wc -l)
-	if [ $modifiedFiles -gt 0 ]; then
-		echo "modified files found, stashing first..."
-		git stash && git fetch && git rebase && git stash pop
-	else
-		echo "no modified files, directly fetch & rebase..."
-		git fetch && git rebase
+	if [ -d ".git" ]; then
+		git fetch
+		local branchName=$(getCurrentGitBranch)
+		local updatedCount=$(git log --oneline ${branchName}..origin/${branchName} | wc -l)
+		if [ $updatedCount -gt 0 ]; then
+			local modifiedFilesCount=$(git status -uno --porcelain | wc -l)
+			if [ $modifiedFilesCount -gt 0 ]; then
+				echo "modified files found, stashing first..."
+				git stash && git rebase && git stash pop
+			else
+				echo "no modified files, directly fetch & rebase..."
+				git rebase
+			fi
+		else
+			echo "no new commit from remote"
+		fi
 	fi
 }
 
@@ -100,9 +109,21 @@ unlock-keyboard() {
 }
 
 # get current git branch name
-getCurrentGitBranch () {
-  git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/[\1]:/'
+getCurrentGitBranch() {
+	git rev-parse --abbrev-ref HEAD 2> /dev/null
 }
+
+# get formatted current git branch name
+getCurrentGitBranch2 () {
+  # git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/[\1]:/'
+
+  # alternative way
+  local branchName=$(getCurrentGitBranch)
+  if [ -n "$branchName" ]; then
+  	echo "[${branchName}]:"
+  fi
+}
+
 
 # connect to remote mongo machine using ssh
 # warning! this is semi-automatic function
@@ -495,9 +516,9 @@ PROMPT_THEME=$(getTerm theme)
 # force override coloring prompt
 case $PROMPT_THEME in
 	1) # default
-		PS1="\t $ccYELLOW\$(getCurrentGitBranch)$ccGREEN\u@\h$ccLIGHTGRAY:$ccBLUE\w$ccLIGHTGRAY\$ ";;
+		PS1="\t $ccYELLOW\$(getCurrentGitBranch2)$ccGREEN\u@\h$ccLIGHTGRAY:$ccBLUE\w$ccLIGHTGRAY\$ ";;
 	2) # midnight
-		PS1="\t $ccTURQUOISE\$(getCurrentGitBranch)$ccBLUE\u@\h$ccLIGHTGRAY:$ccPURPLE\w$ccLIGHTGRAY\$ ";;
+		PS1="\t $ccTURQUOISE\$(getCurrentGitBranch2)$ccBLUE\u@\h$ccLIGHTGRAY:$ccPURPLE\w$ccLIGHTGRAY\$ ";;
 esac
 
 # If this is an xterm set the title to user@host:dir
