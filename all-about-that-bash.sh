@@ -11,16 +11,15 @@ calm down, here are some tools for you... ${uSMILE}
   qssh                   - quick ssh to another machine (implicitly through ansible)
   ssh-whoami             - get whoami status from $(getTerm env1) service name on target machine
   ssh-mongo              - connect to remote mongo machine using ssh (semi-automatic)
+  portof                 - get port number from $(getTerm env1) service name
+  serviceof              - get $(getTerm env1) service name from port number
+  allservices            - list all $(getTerm env1) services
   git-update             - git combo: (stash)-fetch-rebase-(stash_pop)
   qclip                  - quick copy any variable to clipboard
   qkill                  - quick kill process by $(getTerm env1) service name
   get-millis             - get current time in milliseconds
   unlock-keyboard        - resolve idea \"cannot type\" problem
   wew                    - check last command return status
-  
-  portof                 - get port number from $(getTerm env1) service name
-  serviceof              - get $(getTerm env1) service name from port number
-  allservices            - list all $(getTerm env1) services
 ${clDARKGRAY}currently disabled commands (under maintenance):
   exe (beta)             - run any command with elapsed time information
   qlist                  - quick get list of running $(getTerm env1) services
@@ -414,6 +413,54 @@ exe() {
 
 get-millis() {
 	date +%s%3N
+}
+
+allservices() 
+{
+    grep "^start.*().*PORT" ${otherBrc} | cut -d \( -f 1 | cut -d - -f 2-
+}
+
+# get port number by service name
+portof() 
+{
+    if [ -z "$1" ]; then
+        echo "usage: portof <service name>"
+        echo "   eg: portof frs"
+        return 1
+    fi
+
+    local svcs=($(allservices))
+    for s in "${svcs[@]}"
+    do
+        if [ "$s" == "$1" ]; then
+            local thePort=$(grep "stop-${1}.()" ${otherBrc} | cut -d { -f 2 | cut -d ' ' -f 3 | cut -d $ -f 2)
+            echo ${!thePort}
+            return 0
+        fi
+    done
+}
+
+# get service name by port number
+serviceof() 
+{
+    if [ -z "$1" ]; then
+        echo "usage: serviceof <port number>"
+        echo "   eg: serviceof 60091"
+        return 1
+    fi
+
+    if [ ${#1} -ne 5 ]; then
+        echo "port must have length 5"
+        return 2
+    fi
+
+    local portVar=$(grep "=${1}" ${otherBrc} | cut -d "=" -f 1)
+    if [ -n "$portVar" ]; then
+        grep "start-.*${portVar}" ${otherBrc} | cut -d \( -f1 | cut -d - -f2
+        return 0
+    else
+        return 3
+    fi
 }
 
 # get whoami status from remote machine by service name

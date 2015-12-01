@@ -1,6 +1,7 @@
 #!/bin/bash
 
 currentDir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+otherBrc=~/tools/fixed/bashrc
 
 # unicode symbol
 uSMILE='\u263A'
@@ -161,4 +162,12 @@ TerminalWindow .notebook tab:active {
 	fi
 
 	echo -e ${gtkCss} > ${gtkPath}/gtk.css
+}
+
+colors-info2() {
+	for((i=16; i<256; i++)); do
+	    printf "\e[48;5;${i}m%03d" $i;
+	    printf '\e[0m';
+	    [ ! $((($i - 15) % 6)) -eq 0 ] && printf ' ' || printf '\n'
+	done
 }
