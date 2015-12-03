@@ -138,22 +138,11 @@ change-theme() {
 coloring-tab() {
 	case $1 in
 		1) # greenish
-			local colorTheme0="8AE828"
-			local colorTheme1="69C810";;
+			local themePath=gtk.css.greenish;;
 		2) # blueish
-			local colorTheme0="35C786"
-			local colorTheme1="2BB";;
+			local themePath=gtk.css.bluish;;
 		*) return 1;;
 	esac
-
-	local gtkCss="
-TerminalWindow .notebook tab:active {
-	background-image: -gtk-gradient (linear, left top, right bottom,
-	                                 from (shade (#${colorTheme0}, 1.5)),
-	                                 to (shade (#${colorTheme1}, 1.0)));
-	
-}
-	"
 
 	local gtkPath="${HOME}/.config/gtk-3.0/"
 	if [ ! -f ${gtkPath} ]; then
@@ -161,7 +150,7 @@ TerminalWindow .notebook tab:active {
 		touch ${gtkPath}/gtk.css
 	fi
 
-	echo -e ${gtkCss} > ${gtkPath}/gtk.css
+	cp ${currentDir}/${themePath} ${gtkPath}/gtk.css --backup
 }
 
 colors-info2() {
@@ -170,4 +159,28 @@ colors-info2() {
 	    printf '\e[0m';
 	    [ ! $((($i - 15) % 6)) -eq 0 ] && printf ' ' || printf '\n'
 	done
+}
+
+colors-info3() {
+	color=16;
+
+	while [ $color -lt 245 ]; do
+	    echo -e "$color: \\033[38;5;${color}mhello\\033[48;5;${color}mworld\\033[0m"
+	    ((color++));
+	done  
+}
+
+text-color() {
+	if [ -z "$3" ]; then
+		echo "usage: text-color <foreground> <background> <text>"
+		return 1;
+	fi
+
+	# color range = 16 - 244
+	local fgcolor=$1
+	local bgcolor=$2
+	shift
+	shift
+	local text=$@
+	echo -e "\\033[48;5;${fgcolor};38;5;${bgcolor}m${text}\\033[0m"
 }

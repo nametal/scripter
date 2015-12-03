@@ -14,9 +14,11 @@ calm down, here are some tools for you... ${uSMILE}
   portof                 - get port number from $(getTerm env1) service name
   serviceof              - get $(getTerm env1) service name from port number
   allservices            - list all $(getTerm env1) services
-  git-update             - git combo: (stash)-fetch-rebase-(stash_pop)
+  git-update             - git combo: fetch-[stash]-rebase-[stash pop]
   qclip                  - quick copy any variable to clipboard
   qkill                  - quick kill process by $(getTerm env1) service name
+  copyFrom               - copy content of remote file to clipboard
+  qstrip                 - quick strip a URL into readable format
   get-millis             - get current time in milliseconds
   unlock-keyboard        - resolve idea \"cannot type\" problem
   wew                    - check last command return status
@@ -31,6 +33,25 @@ tips: how to use? try one of those command by run it without parameter
 "
 }
 
+copyFrom() {
+	if [ -z "$2" ]; then
+		echo "usage: copyFrom <remote-machine> <remote-file-path>"
+		return 1
+	fi
+	qssh $1 "cat $2" | xclip -sel c
+}
+
+qstrip() {
+	echo asd
+	if [ -z "$1" ]; then
+		echo "usage: qstrip <URL-to-strip>"
+		return 1
+	fi
+	echo $1 | sed 's/[&|?]/\n/g'
+}
+
+# http://www-staging05.traveloka.com/en-sg/agentredirect?airlineId0=CX&airlineId1=&agentId=trinusa&airport0=CGK&airport1=AMS&date0=2016-06-16&date1=2016-06-18&providerId0=galileo&providerId1=galileo&numAdults=1&numChildren=1&numInfants=0&flightSegment=(((CGK.HKG.CX.CX-798.null.0%3A10.5%3A55.0.420.480.null).(HKG.AMS.CX.CX-271.null.0%3A15.6%3A40.1.480.60.null)).((AMS.HKG.CX.CX-270.null.13%3A10.6%3A20.0.60.480.null).(HKG.CGK.CX.CX-777.null.9%3A20.13%3A10.1.480.420.null)))&itineraryFares=((123726.123726.46371))&searchType=NS2&searchId=1519434098324537355&isPackage=1&currency=SGD
+
 git-update() {
 	if [ -d ".git" ]; then
 		git fetch
@@ -40,7 +61,9 @@ git-update() {
 			local modifiedFilesCount=$(git status -uno --porcelain | wc -l)
 			if [ $modifiedFilesCount -gt 0 ]; then
 				echo "modified files found, stashing first..."
-				git stash && git rebase && git stash pop
+				git stash
+				git rebase
+				git stash pop
 			else
 				echo "no modified files, directly fetch & rebase..."
 				git rebase
@@ -129,37 +152,22 @@ getCurrentGitBranch2 () {
 # warning! this is semi-automatic function
 ssh-mongo() {
 	if [ -z "$2" ]; then
-		echo "usage: ssh-mongo <machine_code> <db_name> [<auth_type>]"
-		echo "  machine_code    eg. data02 for mongodata02"
+		echo "usage: ssh-mongo <machine_code> <db_name>"
+		echo "  machine_code    eg. data for mongodata"
 		echo "  db_name         eg. $(getTerm env1)-agent"
-		echo "  auth_type       optional, admin for admin, leave empty for dev"
 		return 1
 	fi
-
-	if [ -z "$3" ]; then
-		local MONGO_USER=dev
-		local SLAVEOK='rs.slaveOk()'
-	else
-		if [ $3 = 'admin' ]; then
-			local MONGO_USER=admin
-		else
-			echo "invalid auth type '${3}'"
-			return 2
-		fi
-	fi
-	local MONGO_PWD=$(qdec $MONGO_USER)
-
+	
 	# 1. store all mongo commands to clipboard
 	local CMDS="mongo
-use ${2}
-db.auth('${MONGO_USER}','${MONGO_PWD}')
-${SLAVEOK}"
+\$dbSecondary.connect('mongo${1}','${2}')"
+
 	echo -e "$CMDS" | xclip -sel c
 	echo "once logged in, please paste (Ctrl+Shift+V)"
 	read -s -n1 -p "press any key to continue..."
 
 	# 2. ssh to remote machine
-	qssh mongo$1
+	qssh mongoscript02
 
 	# 3. manual paste (Ctrl+Shift+V) on terminal
 	#    this is why I called it semi-automatic ;p

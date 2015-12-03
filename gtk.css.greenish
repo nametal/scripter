@@ -1,0 +1,18 @@
+TerminalWindow,
+TerminalWindow.background {
+        background-color: #6e6e6e;
+}
+
+TerminalWindow .notebook tab {
+	border: 0;
+		background-image: -gtk-gradient (
+			linear, left top, right bottom, 
+			from (shade (#011, 1.5)), to (shade (#031, 1.0))
+		); 
+}
+TerminalWindow .notebook tab:active { 
+		background-image: -gtk-gradient (
+			linear, left top, right bottom, 
+			from (shade (#8E2, 1.5)), to (shade (#69C810, 1.0))
+		); 
+}
