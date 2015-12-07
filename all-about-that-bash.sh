@@ -529,3 +529,27 @@ xterm*|rxvt*)
 *)
     ;;
 esac
+
+#remap Home-End-PgUp-PgDn (normal / external keyboard) and Home-PgUp-PgDn-End (switched / internal keyboard)
+keyboard-map() {
+    if [ -z "$1" ]; then
+        echo "usage: keyboard-internal <is_switch_rightmost_buttons>"
+        echo "  is_switch_rightmost_buttons    false=normal layout: Home-End-PgUp-PgDn"
+        echo "  is_switch_rightmost_buttons    true=changed layout: Home-PgUp-PgDn-End"
+        return 1
+    fi
+
+    if [ $1 = 'true' ]; then
+    	xmodmap -e "keycode 115 = Prior"
+    	xmodmap -e "keycode 112 = Next"
+    	xmodmap -e "keycode 117 = End"
+        echo "keyboard layout changed to (Home-PgUp-PgDn-End)"
+        return 0
+    else
+    	xmodmap -e "keycode 115 = End"
+    	xmodmap -e "keycode 112 = Prior"
+    	xmodmap -e "keycode 117 = Next"
+        echo "keyboard layout changed to (Home-End-PgUp-PgDn)"
+        return 0
+    fi
+}
