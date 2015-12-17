@@ -10,13 +10,14 @@ calm down, here are some tools for you... ${uSMILE}
   
   qssh                   - quick ssh to another machine (implicitly through ansible)
   ssh-whoami             - get whoami status from $(getTerm env1) service name on target machine
+  to-mongo               - connect to remote mongo machine directly (automatic)
   ssh-mongo              - connect to remote mongo machine using ssh (semi-automatic)
   portof                 - get port number from $(getTerm env1) service name
   serviceof              - get $(getTerm env1) service name from port number
   allservices            - list all $(getTerm env1) services
   git-update             - git combo: fetch-[stash]-rebase-[stash pop]
   qclip                  - quick copy any variable to clipboard
-  qkill                  - quick kill process by $(getTerm env1) service name
+  qkill                  - quick kill process by $(getTerm env1) service name (local)
   copyFrom               - copy content of remote file to clipboard
   qstrip                 - quick strip a URL into readable format
   get-millis             - get current time in milliseconds
@@ -25,11 +26,10 @@ calm down, here are some tools for you... ${uSMILE}
 ${clDARKGRAY}currently disabled commands (under maintenance):
   exe (beta)             - run any command with elapsed time information
   qlist                  - quick get list of running $(getTerm env1) services
-  to-mongo               - connect to remote mongo machine directly (automatic)
   qpush                  - quick push binary to repo (batch-able)
   qpull                  - quick pull binary from repo to a remote server using ssh (semi-automatic)
 ${cLIGHTGRAY}
-tips: how to use? try one of those command by run it without parameter
+tips: how to use? try one of those commands by run it without parameter
 "
 }
 
@@ -60,16 +60,16 @@ git-update() {
 		if [ $updatedCount -gt 0 ]; then
 			local modifiedFilesCount=$(git status -uno --porcelain | wc -l)
 			if [ $modifiedFilesCount -gt 0 ]; then
-				echo "modified files found, stashing first..."
+				echo -e "${cBLUE}modified files found, stashing first...${cLIGHTGRAY}"
 				git stash
 				git rebase
 				git stash pop
 			else
-				echo "no modified files, directly fetch & rebase..."
+				echo -e "${cGREEN}no modified files, directly fetch & rebase...${cLIGHTGRAY}"
 				git rebase
 			fi
 		else
-			echo "no new commit from remote"
+			echo -e "${cYELLOW}no new commit from remote${cLIGHTGRAY}"
 		fi
 	fi
 }
@@ -83,13 +83,13 @@ qclip() {
 }
 
 qenc() {
-	if [ -z "$2" ]; then
-		echo "usage: qdec <role> <plaintext>"
+	if [ -z "$1" ]; then
+		echo "usage: qenc <role> (text to encrypt will be prompted later)"
 		return 1
 	fi
-	local role=$1
-	shift
-	echo $@ | openssl enc -aes-256-cbc -a -salt -out $DIR/$(getTerm $role)
+	read -s -p "plain-text : " PLAIN
+	echo ""
+	echo $PLAIN | openssl enc -aes-256-cbc -a -salt -out $DIR/$(getTerm $1)
 }
 
 qdec() {
@@ -113,13 +113,13 @@ qssh() {
 # check last command return status
 wew() {
 	if [ $? -eq 0 ]; then
-		echo -e "${cTURQUOISE}${uCHECK}"
+		echo -e "${cTURQUOISE}${uCHECK}${cLIGHTGRAY}"
 	else
-		echo -e "${cRED}${uWRONG}"
+		echo -e "${cRED}${uWRONG}${cLIGHTGRAY}"
 	fi
 }
 
-# resolve idea "can't type" problem
+# resolve idea "can't type" problem (corner case)
 unlock-keyboard() {
     ibus-daemon -rd
     if [ $(ps aux | grep -v grep | grep -c "ibus-daemon -rd") -ge 1 ]
@@ -185,18 +185,16 @@ to-mongo() {
 	fi
 
 	if [ -z "$3" ]; then
-		local MONGO_USER=dev
-		local SLAVEOK='\nrs.slaveOk()'
+		MONGO_USER=dev
 	else
 		if [ $3 = 'admin' ]; then
-			local MONGO_USER=admin
+			MONGO_USER=admin
 		else
 			echo "invalid auth type '${3}'"
 			return 2
 		fi
 	fi
 	local MONGO_PWD=$(qdec $MONGO_USER)
-	
 	mongo --host mongo$1 --port 27017 -u $MONGO_USER -p $MONGO_PWD $2
 }
 
@@ -271,8 +269,8 @@ qlist() {
   #   		echo number
   #   	else
   #   		echo not number
-  #   		local servicename=$(serviceof $p)
-		# 	echo $servicename
+    		# local servicename=$(serviceof $p)
+			# echo $servicename
     	# fi
 	done
 }
