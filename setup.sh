@@ -32,6 +32,8 @@ echo -e "Which color theme do you prefer ?"
 ask-prompt
 read -p "Choose [1/2] : "
 change-theme $REPLY
+read -p "Company name : "
+set-env $REPLY
 
 # include bash in bashrc
 echo -e "\n${include}" >> $HOME/.bashrc

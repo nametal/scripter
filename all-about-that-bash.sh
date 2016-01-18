@@ -19,6 +19,7 @@ calm down, here are some tools for you... ${uSMILE}
   qclip                  - quick copy any variable to clipboard
   qkill                  - quick kill process by $(getTerm env1) service name (local)
   copyFrom               - copy content of remote file to clipboard
+  get-log-range          - get log range determined by keyword
   qstrip                 - quick strip a URL into readable format
   get-millis             - get current time in milliseconds
   unlock-keyboard        - resolve idea \"cannot type\" problem
@@ -31,6 +32,30 @@ ${clDARKGRAY}currently disabled commands (under maintenance):
 ${cLIGHTGRAY}
 tips: how to use? try one of those commands by run it without parameter
 "
+}
+
+get-log-range() {
+	if [ -z "$3" ]; then
+		echo "usage: getLogRange <filename> <keyword-from> <keyword-to>"
+		echo "  it will get range from the first time <keyword-from> is found until the last <keyword-to> is found"
+		return 1
+	fi
+	if [ ! -f $1 ]; then
+		echo "file \"${1}\" doesn't exists"
+		return 2
+	fi
+	local fromLine=$(grep -n "$2" $1 | head -1 | cut -d':' -f 1)
+	local toLine=$(grep -n "$3" $1 | tail -1 | cut -d':' -f 1)
+	if [ -z "$fromLine" ]; then
+		echo "keyword \"${2}\" not found in $1"
+		return 3
+	fi
+	if [ -z "$toLine" ]; then
+		echo -e "${cYELLOW}keyword \"${3}\" not found, grab to the last line...${cLIGHTGRAY}"
+		# get last line number
+		toLine=$(wc -l $1 | cut -d' ' -f 1)
+	fi
+	sed -n ${fromLine},${toLine}p $1
 }
 
 copyFrom() {
@@ -50,8 +75,6 @@ qstrip() {
 	echo $1 | sed 's/[&|?]/\n/g'
 }
 
-# http://www-staging05.traveloka.com/en-sg/agentredirect?airlineId0=CX&airlineId1=&agentId=trinusa&airport0=CGK&airport1=AMS&date0=2016-06-16&date1=2016-06-18&providerId0=galileo&providerId1=galileo&numAdults=1&numChildren=1&numInfants=0&flightSegment=(((CGK.HKG.CX.CX-798.null.0%3A10.5%3A55.0.420.480.null).(HKG.AMS.CX.CX-271.null.0%3A15.6%3A40.1.480.60.null)).((AMS.HKG.CX.CX-270.null.13%3A10.6%3A20.0.60.480.null).(HKG.CGK.CX.CX-777.null.9%3A20.13%3A10.1.480.420.null)))&itineraryFares=((123726.123726.46371))&searchType=NS2&searchId=1519434098324537355&isPackage=1&currency=SGD
-
 git-update() {
 	if [ -d ".git" ]; then
 		git fetch
@@ -60,14 +83,19 @@ git-update() {
 		if [ $updatedCount -gt 0 ]; then
 			local modifiedFilesCount=$(git status -uno --porcelain | wc -l)
 			if [ $modifiedFilesCount -gt 0 ]; then
-				echo -e "${cBLUE}modified files found, stashing first...${cLIGHTGRAY}"
+				echo -e "${cGREEN}modified files found, stashing first...${cLIGHTGRAY}"
 				git stash
+				echo -e "${cGREEN}rebasing...${cLIGHTGRAY}"
 				git rebase
+				echo -e "${cGREEN}popping stash...${cLIGHTGRAY}"
 				git stash pop
+				echo -e "${cGREEN}"
 			else
-				echo -e "${cGREEN}no modified files, directly fetch & rebase...${cLIGHTGRAY}"
+				echo -e "${cTURQUOISE}no modified files found, directly fetch & rebase...${cLIGHTGRAY}"
 				git rebase
+				echo -e "${cTURQUOISE}"
 			fi
+			echo -e "Sync complete.${cLIGHTGRAY}"
 		else
 			echo -e "${cYELLOW}no new commit from remote${cLIGHTGRAY}"
 		fi
@@ -558,4 +586,26 @@ keyboard-map() {
         echo "keyboard layout changed to (Home-End-PgUp-PgDn)"
         return 0
     fi
+}
+
+# copied from: http://serverfault.com/a/3842
+extract () {
+   if [ -f $1 ] ; then
+       case $1 in
+           *.tar.bz2)   tar xvjf $1    ;;
+           *.tar.gz)    tar xvzf $1    ;;
+           *.bz2)       bunzip2 $1     ;;
+           *.rar)       unrar x $1     ;;
+           *.gz)        gunzip $1      ;;
+           *.tar)       tar xvf $1     ;;
+           *.tbz2)      tar xvjf $1    ;;
+           *.tgz)       tar xvzf $1    ;;
+           *.zip)       unzip $1       ;;
+           *.Z)         uncompress $1  ;;
+           *.7z)        7z x $1        ;;
+           *)           echo "don't know how to extract '$1'..." ;;
+       esac
+   else
+       echo "'$1' is not a valid file!"
+   fi
 }

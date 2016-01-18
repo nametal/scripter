@@ -130,6 +130,12 @@ ask-prompt() {
 	echo -e "(2) Blueish   \t${prompt2}"
 }
 
+set-env() {
+	local upcase=$(echo "$1" | tr '[:lower:]' '[:upper:]')
+	sed -i -re "s/(env1:)[^:]*$/\1${1}/" $currentDir/term
+	sed -i -re "s/(env2:)[^:]*$/\1${upcase}/" $currentDir/term
+}
+
 change-theme() {	
 	sed -i -re "s/(theme:)[^:]*$/\1${1}/" $currentDir/term
 	coloring-tab $1
