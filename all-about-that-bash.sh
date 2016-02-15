@@ -107,7 +107,7 @@ qclip() {
 		echo "usage: qclip <variable>"
 		return 1
 	fi
-	echo $1 | xclip -sel c
+	printf $1 | xclip -sel c
 }
 
 qenc() {
