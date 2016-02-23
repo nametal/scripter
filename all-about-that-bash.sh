@@ -15,7 +15,7 @@ calm down, here are some tools for you... ${uSMILE}
   portof                 - get port number from $(getTerm env1) service name
   serviceof              - get $(getTerm env1) service name from port number
   allservices            - list all $(getTerm env1) services
-  git-update             - git combo: fetch-[stash]-rebase-[stash pop]
+  git-sync               - git combo: fetch-[stash]-rebase-[stash pop]
   qclip                  - quick copy any variable to clipboard
   qkill                  - quick kill process by $(getTerm env1) service name (local)
   copyFrom               - copy content of remote file to clipboard
@@ -75,7 +75,7 @@ qstrip() {
 	echo $1 | sed 's/[&|?]/\n/g'
 }
 
-git-update() {
+git-sync() {
 	if [ -d ".git" ]; then
 		git fetch
 		local branchName=$(getCurrentGitBranch)
@@ -91,7 +91,7 @@ git-update() {
 				git stash pop
 				echo -e "${cGREEN}"
 			else
-				echo -e "${cTURQUOISE}no modified files found, directly fetch & rebase...${cLIGHTGRAY}"
+				echo -e "${cTURQUOISE}directly fetch & rebase...${cLIGHTGRAY}"
 				git rebase
 				echo -e "${cTURQUOISE}"
 			fi
