@@ -16,6 +16,7 @@ calm down, here are some tools for you... ${uSMILE}
   serviceof              - get $(getTerm env1) service name from port number
   allservices            - list all $(getTerm env1) services
   git-sync               - git combo: fetch-[stash]-rebase-[stash pop]
+  synch-db               - sync db from remote machine
   qclip                  - quick copy any variable to clipboard
   qkill                  - quick kill process by $(getTerm env1) service name (local)
   copyFrom               - copy content of remote file to clipboard
@@ -32,6 +33,37 @@ ${clDARKGRAY}currently disabled commands (under maintenance):
 ${cLIGHTGRAY}
 tips: how to use? try one of those commands by run it without parameter
 "
+}
+
+synch-db() {
+	if [ -z "$3" ]; then
+		echo "usage: synch-db <host> <db> <collection1> [collection2 ...]"
+		return 1
+	fi
+	local host=$1
+	local db=$2
+	shift
+	shift
+
+	local MONGO_USER=admin
+	local MONGO_PWD=$(qdec $MONGO_USER)
+
+	for col in "${@}"
+	do
+		echo -e "${cTURQUOISE}syncing ${col}...${cLIGHTGRAY}"
+		single-dump $host $db $col $MONGO_USER $MONGO_PWD
+	done
+}
+
+single-dump() {
+	tmpFile=/tmp/$1.$2.$3
+	mongoexport --host $1:27017 --username $MONGO_USER --password $MONGO_PWD --db $2 --collection $3 --out $tmpFile
+	if [ $? -eq 0 ]; then
+		mongoimport $MONGO_AUTH --host localhost --db $2 --collection $3 --file $tmpFile --drop
+	else
+		echo "Problem occured. Not importing"
+	fi
+	rm $tmpFile
 }
 
 # help you remember what is the script to print compact query
