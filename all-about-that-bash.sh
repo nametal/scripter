@@ -34,6 +34,18 @@ tips: how to use? try one of those commands by run it without parameter
 "
 }
 
+# help you remember what is the script to print compact query
+db-tojson() {
+	if [ -z "$1" ]; then
+		echo "usage: db-tojson <db-name>"
+		echo "  it will give you (clipboard) script to get compact result of query"
+		return 1
+	fi
+	local result="db.${1}.find().forEach(function(f){print(tojson(f, '', true));});"
+	echo -e "$result <-- ${cTURQUOISE}copied to clipboard."
+	printf $result | xclip -sel c
+}
+
 get-log-range() {
 	if [ -z "$3" ]; then
 		echo "usage: getLogRange <filename> <keyword-from> <keyword-to>"
@@ -67,7 +79,6 @@ copyFrom() {
 }
 
 qstrip() {
-	echo asd
 	if [ -z "$1" ]; then
 		echo "usage: qstrip <URL-to-strip>"
 		return 1
@@ -528,12 +539,7 @@ ssh-whoami() {
     fi
 
     if [ $2 = "fetcher" ]; then
-    	echo $1 | grep -q '[0-9]$'
-    	if [ $? -eq 0 ]; then # if $1 contains number in the end
-    		thehost="$1.$(getTerm env1).com"
-    	else
-    		thehost=$1
-    	fi
+    	thehost=$(sanitize-host $1)
         ssh ansible01 "ansible $thehost -m shell -a 'cat /var/$(getTerm env1)/fetcher/build.properties'"
         return 0
     fi
@@ -543,7 +549,24 @@ ssh-whoami() {
         echo "service '${2}' not found"
         return 2
     fi
+
+    # this is adhoc solution
+    if [[ $1 == staging* ]]; then
+    	thehost=$(sanitize-host $1)
+    	ssh ansible01 "ansible $thehost -m shell -a 'cat /var/$(getTerm env1)/running/$2/WEB-INF/classes/build.properties'"
+    	return 0
+    fi
     ssh ansible01 "curl $1:${PORT}/whoami" | python -m json.tool
+}
+
+sanitize-host() {
+	echo $1 | grep -q '[0-9]$'
+	if [ $? -eq 0 ]; then # if $1 contains number in the end
+		thehost="$1.$(getTerm env1).com"
+	else
+		thehost=$1
+	fi
+	echo $thehost
 }
 
 PROMPT_THEME=$(getTerm theme)
