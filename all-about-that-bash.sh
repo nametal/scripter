@@ -334,15 +334,8 @@ qlist() {
 
 	for p in "${runningPorts[@]}"
 	do
-		echo "${p}"
-		# [[ $p =~ ^-?[0-9]+$ ]] # test if p is number
-		# if [ $? -eq 0 ]; then # if $2 contains number in the end
-  #   		echo number
-  #   	else
-  #   		echo not number
-    		# local servicename=$(serviceof $p)
-			# echo $servicename
-    	# fi
+		x=`echo "${p}" | sed 's/[^0-9]*//g'` # sanitize number
+		echo $(serviceof $x)
 	done
 }
 
