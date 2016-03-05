@@ -17,6 +17,7 @@ calm down, here are some tools for you... ${uSMILE}
   allservices            - list all $(getTerm env1) services
   git-sync               - git combo: fetch-[stash]-rebase-[stash pop]
   synch-db               - sync db from remote machine
+  qlist                  - quick get list of running $(getTerm env1) services
   qclip                  - quick copy any variable to clipboard
   qkill                  - quick kill process by $(getTerm env1) service name (local)
   copyFrom               - copy content of remote file to clipboard
@@ -27,7 +28,6 @@ calm down, here are some tools for you... ${uSMILE}
   wew                    - check last command return status
 ${clDARKGRAY}currently disabled commands (under maintenance):
   exe (beta)             - run any command with elapsed time information
-  qlist                  - quick get list of running $(getTerm env1) services
   qpush                  - quick push binary to repo (batch-able)
   qpull                  - quick pull binary from repo to a remote server using ssh (semi-automatic)
 ${cLIGHTGRAY}
