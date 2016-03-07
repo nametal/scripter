@@ -36,32 +36,38 @@ tips: how to use? try one of those commands by run it without parameter
 }
 
 synch-db() {
+	if [ "$1" == "--to" ]; then
+		targetHost=$2
+		shift 2
+	else
+		targetHost=localhost
+	fi
 	if [ -z "$3" ]; then
-		echo "usage: synch-db <host> <db> <collection1> [collection2 ...]"
+		echo "usage: synch-db [--to targetHost] <host> <db> <collection1> [collection2 ...]"
 		return 1
 	fi
+
 	local host=$1
 	local db=$2
-	shift
-	shift
+	shift 2
 
 	local MONGO_USER=admin
 	local MONGO_PWD=$(qdec $MONGO_USER)
 
 	for col in "${@}"
 	do
-		echo -e "${cTURQUOISE}syncing ${col}...${cLIGHTGRAY}"
-		single-dump $host $db $col $MONGO_USER $MONGO_PWD
+		single-dump $host $db $col $MONGO_USER $MONGO_PWD $targetHost
 	done
 }
 
 single-dump() {
 	tmpFile=/tmp/$1.$2.$3
-	mongoexport --host $1:27017 --username $MONGO_USER --password $MONGO_PWD --db $2 --collection $3 --out $tmpFile
+	mongoexport --host $1:27017 --db $2 --collection $3 --username $4 --password $5 --out $tmpFile
 	if [ $? -eq 0 ]; then
-		mongoimport $MONGO_AUTH --host localhost --db $2 --collection $3 --file $tmpFile --drop
+		echo -e "${cTURQUOISE}syncing ${3} to ${6}...${cLIGHTGRAY}"
+		mongoimport $MONGO_AUTH --host $6 --db $2 --collection $3 --file $tmpFile --drop
 	else
-		echo "Problem occured. Not importing"
+		echo "{cRED}Problem occured. Not importing{cLIGHTGRAY}"
 	fi
 	rm $tmpFile
 }
@@ -74,8 +80,8 @@ db-tojson() {
 		return 1
 	fi
 	local result="db.${1}.find().forEach(function(f){print(tojson(f, '', true));});"
-	echo -e "$result <-- ${cTURQUOISE}copied to clipboard."
-	printf $result | xclip -sel c
+	echo -e "$result <-- ${cTURQUOISE}copied to clipboard.${cLIGHTGRAY}"
+	printf "${result}" | xclip -sel c
 }
 
 get-log-range() {
