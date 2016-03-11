@@ -42,14 +42,14 @@ qtail() {
 		echo "example: qtail -100f staging05 fops_console.log"
 		return 1
 	elif [ "$4" ]; then
-		echo "susdulu mas"
+		echo "too much arguments"
 		return 1
 	else
 		if [ "$3" ]; then
 			tailingDepth=$1
 			shift 1
 		fi
-		ssh -t ansible01 "ssh -t $1 'tail $tailingDepth /var/traveloka/log/$2'"
+		qssh $1 "tail $tailingDepth /var/$(getTerm env1)/log/$2"
 		return 0
 	fi
 }
