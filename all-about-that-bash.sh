@@ -35,6 +35,25 @@ tips: how to use? try one of those commands by run it without parameter
 "
 }
 
+qtail() {
+	tailingDepth=-1000f
+	if [ -z "$2" ]; then
+		echo "usage :  qtail [-#f] <host> <log-filename>"
+		echo "example: qtail -100f staging05 fops_console.log"
+		return 1
+	elif [ "$4" ]; then
+		echo "susdulu mas"
+		return 1
+	else
+		if [ "$3" ]; then
+			tailingDepth=$1
+			shift 1
+		fi
+		ssh -t ansible01 "ssh -t $1 'tail $tailingDepth /var/traveloka/log/$2'"
+		return 0
+	fi
+}
+
 synch-db() {
 	if [ "$1" == "--to" ]; then
 		targetHost=$2
