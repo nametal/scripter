@@ -8,22 +8,24 @@ helpme() {
 	echo -e "
 calm down, here are some tools for you... ${uSMILE} 
   
-  qssh                   - quick ssh to another machine (implicitly through ansible)
-  ssh-whoami             - get whoami status from $(getTerm env1) service name on target machine
-  to-mongo               - connect to remote mongo machine directly (automatic)
-  ssh-mongo              - connect to remote mongo machine using ssh (semi-automatic)
-  portof                 - get port number from $(getTerm env1) service name
-  serviceof              - get $(getTerm env1) service name from port number
   allservices            - list all $(getTerm env1) services
-  git-sync               - git combo: fetch-[stash]-rebase-[stash pop]
-  synch-db               - sync db from remote machine
-  qlist                  - quick get list of running $(getTerm env1) services
-  qclip                  - quick copy any variable to clipboard
-  qkill                  - quick kill process by $(getTerm env1) service name (local)
   copyFrom               - copy content of remote file to clipboard
   get-log-range          - get log range determined by keyword
-  qstrip                 - quick strip a URL into readable format
   get-millis             - get current time in milliseconds
+  git-stash-add          - selective stash (git added files)
+  git-sync               - git combo: fetch-[stash]-rebase-[stash pop]
+  portof                 - get port number from $(getTerm env1) service name
+  qclip                  - quick copy any variable to clipboard
+  qkill                  - quick kill process by $(getTerm env1) service name (local)
+  qlist                  - quick get list of running $(getTerm env1) services
+  qssh                   - quick ssh to another machine (implicitly through ansible)
+  qstrip                 - quick strip a URL into readable format
+  qtail                  - tail directly from remote machine
+  serviceof              - get $(getTerm env1) service name from port number
+  ssh-mongo              - connect to remote mongo machine using ssh (semi-automatic)
+  ssh-whoami             - get whoami status from $(getTerm env1) service name on target machine
+  synch-db               - sync db from remote machine
+  to-mongo               - connect to remote mongo machine directly (automatic)
   unlock-keyboard        - resolve idea \"cannot type\" problem
   wew                    - check last command return status
 ${clDARKGRAY}currently disabled commands (under maintenance):
@@ -33,6 +35,29 @@ ${clDARKGRAY}currently disabled commands (under maintenance):
 ${cLIGHTGRAY}
 tips: how to use? try one of those commands by run it without parameter
 "
+}
+
+git-stash-add() {
+	if [ -z "$1" ]; then
+		echo "instruction : stage files before stash by using git add"
+		echo "usage : git-stash-add <stash-name-or-comment>"
+		return 1
+	fi
+	stagedCount=$(git diff --cached --name-only | wc -l)
+	if [ $stagedCount -eq 0 ]; then
+		echo -e "${cYELLOW}stage files first using git add${cLIGHTGRAY}"
+		return 2
+	fi
+	git commit -m  "temp"	# temporary commit staged files
+	if [ $? -ne 0 ]; then
+		echo -e "${cRED}failed to commit, please check your branch restriction${cLIGHTGRAY}"
+		return 3
+	fi
+	git stash 				# temporary stash remaining files
+	git reset --soft HEAD~ 	# bring back last committed files to unstaged
+	git stash save "${@}" 	# stash those files
+	git stash pop stash@{1} # bring back previous files to unstaged
+	git stash list
 }
 
 qtail() {
@@ -88,7 +113,7 @@ single-dump() {
 	else
 		echo "{cRED}Problem occured. Not importing{cLIGHTGRAY}"
 	fi
-	rm $tmpFile
+	# rm $tmpFile
 }
 
 # help you remember what is the script to print compact query
