@@ -14,13 +14,14 @@ calm down, here are some tools for you... ${uSMILE}
   get-millis             - get current time in milliseconds
   git-stash-add          - selective stash (git added files)
   git-sync               - git combo: fetch-[stash]-rebase-[stash pop]
+  multitail              - tail log on multiple machines at once
   portof                 - get port number from $(getTerm env1) service name
   qclip                  - quick copy any variable to clipboard
   qkill                  - quick kill process by $(getTerm env1) service name (local)
   qlist                  - quick get list of running $(getTerm env1) services
   qssh                   - quick ssh to another machine (implicitly through ansible)
   qstrip                 - quick strip a URL into readable format
-  qtail                  - tail directly from remote machine
+  qtail                  - tail (coloured) directly from remote machine
   serviceof              - get $(getTerm env1) service name from port number
   ssh-mongo              - connect to remote mongo machine using ssh (semi-automatic)
   ssh-whoami             - get whoami status from $(getTerm env1) service name on target machine
@@ -60,6 +61,22 @@ git-stash-add() {
 	git stash list
 }
 
+multitail() {
+	if [ -z "$2" ]; then
+		echo "usage: multitail <log-filename> <machine1> [machine2 ...]"
+		echo "eg: multitail frs.log frs16 frs17"
+		return 1
+	fi
+	local log=$1
+	shift
+	local commands=
+	for mac in "${@}"
+	do
+		commands+="qssh -n $mac 'tail -f /var/$(getTerm env1)/log/$log' & "
+	done
+	eval $commands
+}
+
 qtail() {
 	tailingDepth=-1000f
 	if [ -z "$2" ]; then
@@ -74,7 +91,13 @@ qtail() {
 			tailingDepth=$1
 			shift 1
 		fi
-		qssh $1 "tail $tailingDepth /var/$(getTerm env1)/log/$2"
+		qssh $1 "tail $tailingDepth /var/$(getTerm env1)/log/$2 \\
+      | sed -u 's/\(\[[^\[ =]*\]\)/\x1b[1m\1\x1b[0m/g' \\
+      | sed -u 's/\(.* FATAL .*\)/\x1b[0;31m\1\x1b[0m/g' \\
+      | sed -u 's/\(.* ERROR .*\)/\x1b[0;31m\1\x1b[0m/g' \\
+      | sed -u 's/\( WARN \)/\x1b[0;33m\1\x1b[0m/g' \\
+      | sed -u 's/\( INFO \)/\x1b[0;32m\1\x1b[0m/g' \\
+      | sed -u 's/\(http:\/\/[^ ]*\)/\x1b[2;4;36m\1\x1b[0m/g'"
 		return 0
 	fi
 }
@@ -223,12 +246,16 @@ qdec() {
 
 # ssh-ing a machine through ansible
 qssh() {
+	if [ $1 == "-n" ]; then # hidden param to redirects stdin from /dev/null
+		opt="-n"
+		shift
+	fi
 	if [ -z "$1" ]; then
 		echo "usage: ssh <target_machine>"
 		echo "  target_machine   eg. tv, frs, tap"
 		return 1
 	fi
-	ssh -t ansible01 "ssh $@"
+	ssh -t $opt ansible01 "ssh $@"
 }
 
 # check last command return status
@@ -381,7 +408,6 @@ qlist() {
 	fi
 
 	local runningPorts=($(eval $strCommand))
-
 	for p in "${runningPorts[@]}"
 	do
 		x=`echo "${p}" | sed 's/[^0-9]*//g'` # sanitize number
