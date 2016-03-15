@@ -72,9 +72,15 @@ multitail() {
 	local commands=
 	for mac in "${@}"
 	do
-		commands+="qssh -n $mac 'tail -f /var/$(getTerm env1)/log/$log' & "
+		commands+="qssh -n $mac 'tail -f /var/$(getTerm env1)/log/$log' | sed 's/^/$mac> /' & "
 	done
-	eval $commands
+	eval $commands \
+      | sed -u 's/\(\[[^\[ =]*\]\)/\x1b[1m\1\x1b[0m/g' \
+      | sed -u 's/\(.* FATAL .*\)/\x1b[0;31m\1\x1b[0m/g' \
+      | sed -u 's/\(.* ERROR .*\)/\x1b[0;31m\1\x1b[0m/g' \
+      | sed -u 's/\( WARN \)/\x1b[0;33m\1\x1b[0m/g' \
+      | sed -u 's/\( INFO \)/\x1b[0;32m\1\x1b[0m/g' \
+      | sed -u 's/\(http:\/\/[^ ]*\)/\x1b[2;4;36m\1\x1b[0m/g'
 }
 
 qtail() {
@@ -408,10 +414,20 @@ qlist() {
 	fi
 
 	local runningPorts=($(eval $strCommand))
+	local onServices=()
 	for p in "${runningPorts[@]}"
 	do
 		x=`echo "${p}" | sed 's/[^0-9]*//g'` # sanitize number
-		echo $(serviceof $x)
+		echo $(serviceof $x)		
+		# onServices+=($(serviceof $x))
+	done
+	return 0
+	#todo enchanced : add build version next to service names
+	thehost=$(sanitize-host $1)
+	for x in ${!onServices[@]}
+	do
+		local thisVersion=ssh ansible01 "ansible $thehost -m shell -a 'cat /var/$(getTerm env1)/running/${onServices[$x]}/WEB-INF/classes/build.properties | grep build.version | cut -d'=' -f 2'"
+		echo "${onServices[$x]} - ${thisVersion}"
 	done
 }
 
