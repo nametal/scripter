@@ -14,7 +14,7 @@ calm down, here are some tools for you... ${uSMILE}
   get-millis             - get current time in milliseconds
   git-stash-add          - selective stash (git added files)
   git-sync               - git combo: fetch-[stash]-rebase-[stash pop]
-  multitail              - tail log on multiple machines at once
+  multilog               - tail/grep log on multiple machines at once
   portof                 - get port number from $(getTerm env1) service name
   qclip                  - quick copy any variable to clipboard
   qkill                  - quick kill process by $(getTerm env1) service name (local)
@@ -61,18 +61,26 @@ git-stash-add() {
 	git stash list
 }
 
-multitail() {
-	if [ -z "$2" ]; then
-		echo "usage: multitail <log-filename> <machine1> [machine2 ...]"
-		echo "eg: multitail frs.log frs16 frs17"
+multilog() {
+	if [ -z "$4" ]; then
+		echo "usage: multilog <tail|grep> <opt> <log-filename> <machine1> [machine2 ...]"
+		echo "eg: multilog tail -100f frs.log frs16 frs17"
 		return 1
+	fi
+	if [ "$1" == "tail" ] || [ "$1" == "grep" ]; then
+		comm=$1
+		opt=$2
+		shift 2
+	else
+		echo "must be tail or grep"
+		return 2
 	fi
 	local log=$1
 	shift
 	local commands=
 	for mac in "${@}"
 	do
-		commands+="qssh -n $mac 'tail -f /var/$(getTerm env1)/log/$log' | sed 's/^/$mac> /' & "
+		commands+="qssh -n $mac '$comm $opt /var/$(getTerm env1)/log/$log' | sed 's/^/$mac> /' & "
 	done
 	eval $commands \
       | sed -u 's/\(\[[^\[ =]*\]\)/\x1b[1m\1\x1b[0m/g' \
