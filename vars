@@ -1,7 +1,7 @@
 #!/bin/bash
 
 currentDir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-otherBrc=~/tools/fixed/bashrc
+otherBrc=~/tools/fixed/services_rc/*
 
 # unicode symbol
 uSMILE='\u263A'

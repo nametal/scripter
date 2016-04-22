@@ -14,7 +14,7 @@ calm down, here are some tools for you... ${uSMILE}
   get-millis             - get current time in milliseconds
   git-stash-add          - selective stash (git added files)
   git-sync               - git combo: fetch-[stash]-rebase-[stash pop]
-  multilog               - tail/grep log on multiple machines at once
+  ntail                  - tail log on multiple machines at once
   portof                 - get port number from $(getTerm env1) service name
   qclip                  - quick copy any variable to clipboard
   qkill                  - quick kill process by $(getTerm env1) service name (local)
@@ -36,6 +36,20 @@ ${clDARKGRAY}currently disabled commands (under maintenance):
 ${cLIGHTGRAY}
 tips: how to use? try one of those commands by run it without parameter
 "
+}
+
+matrix() {
+	for x in {1..100000}; do
+		n=$RANDOM
+		let "y=n % 10"
+		if [ "$y" == 0 ]; then
+			echo -en "${cGREEN}$n "
+		else
+			echo -en "${clGREEN}$n "
+		fi
+		sleep .0005
+	done
+	echo -e "${cLIGHTGRAY}"
 }
 
 git-stash-add() {
@@ -61,26 +75,27 @@ git-stash-add() {
 	git stash list
 }
 
-multilog() {
-	if [ -z "$4" ]; then
-		echo "usage: multilog <tail|grep> <opt> <log-filename> <machine1> [machine2 ...]"
-		echo "eg: multilog tail -100f frs.log frs16 frs17"
+ntail() {
+	if [ -z "$2" ]; then
+		echo "usage: ntail [lines] <log-filename> <machine1> [machine2 ...]"
+		echo "   lines  by default is 100 if not defined"
+		echo "eg: ntail 1000 frs.log frs16 frs17"
 		return 1
 	fi
-	if [ "$1" == "tail" ] || [ "$1" == "grep" ]; then
-		comm=$1
-		opt=$2
-		shift 2
+	if [[ $1 =~ ^[0-9]+$ ]]; then # check if number
+		echo "number"
+		lines=$1
+		shift 1
 	else
-		echo "must be tail or grep"
-		return 2
+		echo "not number"
+		lines=100
 	fi
 	local log=$1
 	shift
 	local commands=
 	for mac in "${@}"
 	do
-		commands+="qssh -n $mac '$comm $opt /var/$(getTerm env1)/log/$log' | sed 's/^/$mac> /' & "
+		commands+="qssh -n $mac 'tail -${lines}f /var/$(getTerm env1)/log/$log' | sed 's/^/$mac> /' & "
 	done
 	eval $commands \
       | sed -u 's/\(\[[^\[ =]*\]\)/\x1b[1m\1\x1b[0m/g' \
@@ -608,11 +623,11 @@ get-millis() {
 
 allservices() 
 {
-    grep "^start.*().*PORT" ${otherBrc} | cut -d \( -f 1 | cut -d - -f 2-
+    grep "^start.*().*PORT" -h ${otherBrc} | cut -d \( -f 1 | cut -d - -f 2-
 }
 
 # get port number by service name
-portof() 
+portof()
 {
     if [ -z "$1" ]; then
         echo "usage: portof <service name>"
@@ -624,7 +639,7 @@ portof()
     for s in "${svcs[@]}"
     do
         if [ "$s" == "$1" ]; then
-            local thePort=$(grep "stop-${1}.()" ${otherBrc} | cut -d { -f 2 | cut -d ' ' -f 3 | cut -d $ -f 2)
+            local thePort=$(grep "stop-${1}.()" -h ${otherBrc} | cut -d { -f 2 | cut -d ' ' -f 3 | cut -d $ -f 2)
             echo ${!thePort}
             return 0
         fi
@@ -632,7 +647,7 @@ portof()
 }
 
 # get service name by port number
-serviceof() 
+serviceof()
 {
     if [ -z "$1" ]; then
         echo "usage: serviceof <port number>"
@@ -645,9 +660,9 @@ serviceof()
         return 2
     fi
 
-    local portVar=$(grep "=${1}" ${otherBrc} | cut -d "=" -f 1)
+    local portVar=$(grep "=${1}" -h ${otherBrc} | cut -d "=" -f1 | cut -d' ' -f2)
     if [ -n "$portVar" ]; then
-        grep "start-.*${portVar}" ${otherBrc} | cut -d \( -f1 | cut -d - -f2
+        grep "start-.*${portVar}" -h ${otherBrc} | cut -d \( -f1 | cut -d - -f2
         return 0
     else
         return 3
