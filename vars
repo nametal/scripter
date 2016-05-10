@@ -131,8 +131,9 @@ ask-prompt() {
 }
 
 set-env() {
+	local locase=$(echo "$1" | tr '[:upper:]' '[:lower:]')
 	local upcase=$(echo "$1" | tr '[:lower:]' '[:upper:]')
-	sed -i -re "s/(env1:)[^:]*$/\1${1}/" $currentDir/term
+	sed -i -re "s/(env1:)[^:]*$/\1${locase}/" $currentDir/term
 	sed -i -re "s/(env2:)[^:]*$/\1${upcase}/" $currentDir/term
 }
 

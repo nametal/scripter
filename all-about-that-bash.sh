@@ -690,13 +690,8 @@ ssh-whoami() {
         return 2
     fi
 
-    # this is adhoc solution
-    if [[ $1 == staging* ]]; then
-    	thehost=$(sanitize-host $1)
-    	ssh ansible01 "ansible $thehost -m shell -a 'cat /var/$(getTerm env1)/running/$2/WEB-INF/classes/build.properties'"
-    	return 0
-    fi
-    ssh ansible01 "curl $1:${PORT}/whoami" | python -m json.tool
+	thehost=$(sanitize-host $1)
+	ssh ansible01 "ansible $thehost -m shell -a 'curl $1:${PORT}/whoami | python -m json.tool'"
 }
 
 sanitize-host() {

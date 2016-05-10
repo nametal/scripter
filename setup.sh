@@ -31,9 +31,14 @@ fi
 echo -e "Which color theme do you prefer ?"
 ask-prompt
 read -p "Choose [1/2] : "
+[ -z $REPLY ] && REPLY=1
 change-theme $REPLY
-read -p "Company name : "
-set-env $REPLY
+unset REPLY
+while [ -z $REPLY ]
+do
+	read -p "Company name : "
+	[ -z $REPLY ] && echo -e "${cRED}must be not empty${cLIGHTGRAY}" || set-env $REPLY
+done
 
 # include bash in bashrc
 echo -e "\n${include}" >> $HOME/.bashrc
