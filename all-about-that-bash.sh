@@ -138,8 +138,13 @@ synch-db() {
 	else
 		targetHost=localhost
 	fi
+	if [ "$1" == "--query" ];then
+		query=$2
+		shift 2
+	fi
+
 	if [ -z "$3" ]; then
-		echo "usage: synch-db [--to targetHost] <host> <db> <collection1> [collection2 ...]"
+		echo "usage: synch-db [--to targetHost] [--query queryStr] <host> <db> <collection1> [collection2 ...]"
 		return 1
 	fi
 
@@ -148,22 +153,40 @@ synch-db() {
 	shift 2
 
 	local MONGO_USER=admin
+	printf "(Leave empty if no auth needed) "
 	local MONGO_PWD=$(qdec $MONGO_USER)
+	if [ -z "$MONGO_PWD" ]; then
+		MONGO_PWD=null
+	fi
 
 	for col in "${@}"
 	do
-		single-dump $host $db $col $MONGO_USER $MONGO_PWD $targetHost
+		single-dump $host $db $col $MONGO_USER $MONGO_PWD $targetHost $query
 	done
 }
 
 single-dump() {
-	tmpFile=/tmp/$1.$2.$3
-	mongoexport --host $1:27017 --db $2 --collection $3 --username $4 --password $5 --out $tmpFile
-	if [ $? -eq 0 ]; then
-		echo -e "${cTURQUOISE}syncing ${3} to ${6}...${cLIGHTGRAY}"
-		mongoimport $MONGO_AUTH --host $6 --db $2 --collection $3 --file $tmpFile --drop
+	if [ -z "$7" ]; then
+		tmpFile=/tmp/$1.$2.$3
 	else
-		echo "{cRED}Problem occured. Not importing{cLIGHTGRAY}"
+		tmpFile=/tmp/$1.$2.$3.$(get-millis)
+	fi
+	if [ "$5" == "null" ]; then
+		mongoexport --host $1:27017 --db $2 --collection $3 --out $tmpFile --query "$7"
+	else
+		mongoexport --host $1:27017 --db $2 --collection $3 --username $4 --password $5 --out $tmpFile --query "$7"
+	fi
+	if [ $? -eq 0 ]; then
+		echo -e "${cTURQUOISE}syncing ${3} to ${6}...${cLIGHTGRAY}"	
+		if [ -z "$7" ]; then
+			mongoimport $MONGO_AUTH --host $6 --db $2 --collection $3 --file $tmpFile --drop
+		else # if query exists then remove documents instead of drop collections
+			echo -e "${cTURQUOISE}by ${7}...${cLIGHTGRAY}"
+			mongo $2 --eval "db.$3.remove($7)"
+			mongoimport $MONGO_AUTH --host $6 --db $2 --collection $3 --file $tmpFile
+		fi
+	else
+		echo -e "{cRED}Problem occured. Not importing{cLIGHTGRAY}"
 	fi
 	# rm $tmpFile
 }
