@@ -368,7 +368,7 @@ ssh-mongo() {
 		return 1
 	fi
 
-	if [ -n "$3" ] && [ $3 = "admin" ]; then
+	if [ -n "$3" ] && [ $3 = "write" ]; then
 		DBVAR=dbPrimary
 		MSUFFIX=03
 	else
