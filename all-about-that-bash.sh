@@ -52,6 +52,15 @@ matrix() {
 	echo -e "${cLIGHTGRAY}"
 }
 
+is() {
+	if [ -z "$1" ]; then
+		echo "usage: is <condition>"
+		echo "eg : is 1 == 1"
+		return 1
+	fi
+	[ $@ ] && echo true || echo false
+}
+
 git-stash-add() {
 	if [ -z "$1" ]; then
 		echo "instruction : stage files before stash by using git add"
@@ -244,7 +253,7 @@ qstrip() {
 }
 
 git-sync() {
-	if [ -d ".git" ]; then
+	if [ -a ".git" ]; then
 		git fetch
 		local branchName=$(getCurrentGitBranch)
 		local updatedCount=$(git log --oneline ${branchName}..origin/${branchName} | wc -l)
@@ -352,22 +361,31 @@ getCurrentGitBranch2 () {
 # warning! this is semi-automatic function
 ssh-mongo() {
 	if [ -z "$2" ]; then
-		echo "usage: ssh-mongo <machine_code> <db_name>"
+		echo "usage: ssh-mongo <machine_code> <db_name> [write]"
 		echo "  machine_code    eg. data for mongodata"
 		echo "  db_name         eg. $(getTerm env1)-agent"
+		echo "  write           optional, leave empty for read only
 		return 1
+	fi
+
+	if [ -n "$3" ] && [ $3 = "admin" ]; then
+		DBVAR=dbPrimary
+		MSUFFIX=03
+	else
+		DBVAR=dbSecondary
+		MSUFFIX=02
 	fi
 	
 	# 1. store all mongo commands to clipboard
 	local CMDS="mongo
-\$dbSecondary.connect('mongo${1}','${2}')"
+\$${DBVAR}.connect('mongo${1}','${2}')"
 
 	echo -e "$CMDS" | xclip -sel c
 	echo "once logged in, please paste (Ctrl+Shift+V)"
 	read -s -n1 -p "press any key to continue..."
 
 	# 2. ssh to remote machine
-	qssh mongoscript02
+	qssh mongoscript${MSUFFIX}
 
 	# 3. manual paste (Ctrl+Shift+V) on terminal
 	#    this is why I called it semi-automatic ;p
@@ -478,7 +496,7 @@ qlist() {
 }
 
 getCurrentBuildVersion() {
-	if [ -d ".git" ]; then
+	if [ -a ".git" ]; then
 		local branchName=$(git branch | grep '*' | cut -d'/' -f2 | cut -d'*' -f2)
 		local hashCode=$(git log --format="%h" | head -1)
 		echo $branchName.$hashCode-$1-$2
