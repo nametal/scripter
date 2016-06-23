@@ -364,7 +364,7 @@ ssh-mongo() {
 		echo "usage: ssh-mongo <machine_code> <db_name> [write]"
 		echo "  machine_code    eg. data for mongodata"
 		echo "  db_name         eg. $(getTerm env1)-agent"
-		echo "  write           optional, leave empty for read only
+		echo "  write           optional, leave empty for read only"
 		return 1
 	fi
 
