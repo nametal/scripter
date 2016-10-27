@@ -14,6 +14,7 @@ calm down, here are some tools for you... ${uSMILE}
   get-millis             - get current time in milliseconds
   git-stash-add          - selective stash (git added files)
   git-sync               - git combo: fetch-[stash]-rebase-[stash pop]
+  ngrep                  - grep log on remote host / group at once
   ntail                  - tail log on multiple machines at once
   portof                 - get port number from $(getTerm env1) service name
   qclip                  - quick copy any variable to clipboard
@@ -27,6 +28,7 @@ calm down, here are some tools for you... ${uSMILE}
   ssh-whoami             - get whoami status from $(getTerm env1) service name on target machine
   synch-db               - sync db from remote machine
   to-mongo               - connect to remote mongo machine directly (automatic)
+  db-tojson              - get mongo query to find all (without limit)
   unlock-keyboard        - resolve idea \"cannot type\" problem
   wew                    - check last command return status
 ${clDARKGRAY}currently disabled commands (under maintenance):
@@ -36,6 +38,10 @@ ${clDARKGRAY}currently disabled commands (under maintenance):
 ${cLIGHTGRAY}
 tips: how to use? try one of those commands by run it without parameter
 "
+}
+
+running-dev2() {
+	ps aux | grep -v grep | grep dev2 | rev | cut -d' ' -f3 | rev
 }
 
 matrix() {
@@ -72,16 +78,46 @@ git-stash-add() {
 		echo -e "${cYELLOW}stage files first using git add${cLIGHTGRAY}"
 		return 2
 	fi
+	echo -e "${cYELLOW}(1) commit added files as temp{cLIGHTGRAY}"
 	git commit -m  "temp"	# temporary commit staged files
 	if [ $? -ne 0 ]; then
 		echo -e "${cRED}failed to commit, please check your branch restriction${cLIGHTGRAY}"
 		return 3
 	fi
+	echo -e "${cYELLOW}(2) stash uncommit files{cLIGHTGRAY}"
 	git stash 				# temporary stash remaining files
+	echo -e "${cYELLOW}(3) reset temp commit, bring back to unstaged{cLIGHTGRAY}"
 	git reset --soft HEAD~ 	# bring back last committed files to unstaged
+	echo -e "${cYELLOW}(4) stash those files{cLIGHTGRAY}"
 	git stash save "${@}" 	# stash those files
+	echo -e "${cYELLOW}(5) unstash (2){cLIGHTGRAY}"
 	git stash pop stash@{1} # bring back previous files to unstaged
 	git stash list
+}
+
+ngrep() {
+	if [ -z "$3" ]; then
+		echo "usage: ngrep <hostname> <log-filename> <grep-syntax>"
+		echo "   hostname     eg. frs13, frsA, fb"
+		echo "   grep-syntax  regular grep syntax without grep"
+		echo "example: ngrep frsA frs.log ERROR.*RouteFetcher -A1"
+		return 1
+	fi
+	
+	thehost=$(sanitize-host $1)
+	logfile=$2
+	shift 2
+	echo "$@"
+	if [[ "$@" == *"|"* ]]; then
+		echo ada pipe
+		beforepipe=$(echo "$@" | cut -d'|' -f1)
+		afterpipe='| $(echo "$@" | cut -d'|' -f2-)'
+	else
+		beforepipe="$@"
+		afterpipe=
+	fi
+	echo ssh ansible01 "ansible $thehost -m shell -a 'grep $beforepipe /var/$(getTerm env1)/log/$logfile $afterpipe'"
+	return 0
 }
 
 ntail() {
@@ -92,11 +128,11 @@ ntail() {
 		return 1
 	fi
 	if [[ $1 =~ ^[0-9]+$ ]]; then # check if number
-		echo "number"
+		# echo "number"
 		lines=$1
 		shift 1
 	else
-		echo "not number"
+		# echo "not number"
 		lines=100
 	fi
 	local log=$1
@@ -104,7 +140,7 @@ ntail() {
 	local commands=
 	for mac in "${@}"
 	do
-		commands+="qssh -n $mac 'tail -${lines}f /var/$(getTerm env1)/log/$log' | sed 's/^/$mac> /' & "
+		commands+="qssh -n $mac 'tail -${lines}f /var/$(getTerm env1)/log/$log' | sed 's/^/[$mac]┃/' & "
 	done
 	eval $commands \
       | sed -u 's/\(\[[^\[ =]*\]\)/\x1b[1m\1\x1b[0m/g' \
@@ -195,7 +231,7 @@ single-dump() {
 			mongoimport $MONGO_AUTH --host $6 --db $2 --collection $3 --file $tmpFile
 		fi
 	else
-		echo -e "{cRED}Problem occured. Not importing{cLIGHTGRAY}"
+		echo -e "${cRED}Problem occured. Not importing${cLIGHTGRAY}"
 	fi
 	# rm $tmpFile
 }
@@ -253,7 +289,7 @@ qstrip() {
 }
 
 git-sync() {
-	if [ -a ".git" ]; then
+	if [ $(git rev-parse --git-dir) ]; then # check whether this dir is git repository
 		git fetch
 		local branchName=$(getCurrentGitBranch)
 		local updatedCount=$(git log --oneline ${branchName}..origin/${branchName} | wc -l)
@@ -732,7 +768,7 @@ ssh-whoami() {
     fi
 
 	thehost=$(sanitize-host $1)
-	ssh ansible01 "ansible $thehost -m shell -a 'curl $1:${PORT}/whoami | python -m json.tool'"
+	curl $1:${PORT}/whoami/ | python -m json.tool
 }
 
 sanitize-host() {
