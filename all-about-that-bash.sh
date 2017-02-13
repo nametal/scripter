@@ -176,6 +176,26 @@ qtail() {
 	fi
 }
 
+get-byte-hr() {
+	numfmt --to=iec-i --suffix=B --padding=7 $@
+};
+
+get-mongo-db-size() {
+	if [ -z "$2" ]; then
+		echo "usage: get-mongo-db-size <host> <db>"
+		return 1
+	fi
+	mongo --host $1 --eval "db = db.getMongo().getDB('$2'); db.stats().dataSize" | tail -1 | get-byte-hr
+}
+
+get-mongo-colls() {
+	if [ -z "$2" ]; then
+		echo "usage: get-mongo-colls <host> <db>"
+		return 1
+	fi
+	mongo --host $1 --eval "db = db.getMongo().getDB('$2'); db.getCollectionNames();" | tail -1 | sed 's/,/ /g'
+}
+
 synch-db() {
 	if [ "$1" == "--to" ]; then
 		targetHost=$2
@@ -187,9 +207,8 @@ synch-db() {
 		query=$2
 		shift 2
 	fi
-
-	if [ -z "$3" ]; then
-		echo "usage: synch-db [--to targetHost] [--query queryStr] <host> <db> <collection1> [collection2 ...]"
+	if [ -z "$2" ]; then
+		echo "usage: synch-db [--to targetHost] [--query queryStr] <host> <db> [<collection1> [collection2 ...]]"
 		return 1
 	fi
 
@@ -198,13 +217,23 @@ synch-db() {
 	shift 2
 
 	local MONGO_USER=admin
-	printf "(Leave empty if no auth needed) "
-	local MONGO_PWD=$(qdec $MONGO_USER)
-	if [ -z "$MONGO_PWD" ]; then
-		MONGO_PWD=null
+	local MONGO_PWD=null
+	# don't require pasword at all
+	# if [ -n "$MONGO_PWD" ]; then
+	# 	printf "(Leave empty if no auth needed) "
+	# 	MONGO_PWD=$(qdec $MONGO_USER)
+	# fi
+
+	local colls="${@}"
+	if [ -z "$1" ]; then # whole db
+		colls=$(get-mongo-colls $host $db)
+		read -p "$db size:$(get-mongo-db-size $host $db). Are you sure[Y/N]? "
+		if ! [[ $REPLY =~ ^[Yy]$ ]]; then
+			return 2;
+		fi
 	fi
 
-	for col in "${@}"
+	for col in $colls
 	do
 		single-dump $host $db $col $MONGO_USER $MONGO_PWD $targetHost $query
 	done
@@ -277,7 +306,7 @@ copyFrom() {
 		echo "usage: copyFrom <remote-machine> <remote-file-path>"
 		return 1
 	fi
-	qssh $1 "cat $2" | xclip -sel c
+	ssh $1 "cat $2" | xclip -sel c
 }
 
 qstrip() {
