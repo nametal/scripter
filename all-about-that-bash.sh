@@ -206,6 +206,13 @@ synch-db() {
 	local db=$2
 	shift 2
 
+	# sanity check
+	nc -vz $host 27017 2> /dev/null
+	if [ $? -ne 0 ]; then
+		echo -e "${clRED}mongo can't connect to ${cLIGHTGRAY}$host";
+		return 2;
+	fi
+
 	local MONGO_USER=admin
 	local MONGO_PWD=null
 	# don't require pasword at all
@@ -217,9 +224,9 @@ synch-db() {
 	local colls="${@}"
 	if [ -z "$1" ]; then # whole db
 		colls=$(get-mongo-colls $host $db)
-		read -p "$db size:$(get-mongo-db-size $host $db). Are you sure[Y/N]? "
+		read -p "syncing db $db, size:$(get-mongo-db-size $host $db). Are you sure[Y/N]? "
 		if ! [[ $REPLY =~ ^[Yy]$ ]]; then
-			return 2;
+			return 3;
 		fi
 	fi
 
