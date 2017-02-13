@@ -8,23 +8,17 @@ helpme() {
 	echo -e "
 calm down, here are some tools for you... ${uSMILE} 
   
-  allservices            - list all $(getTerm env1) services
   copyFrom               - copy content of remote file to clipboard
-  get-log-range          - get log range determined by keyword
+  extract                - effortlessly extract any compressed file type
+  get-byte-hr            - get human readable byte size
   get-millis             - get current time in milliseconds
+  get-mongo-db-size      - get mongo database size
+  get-mongo-colls        - get mongo collection names
   git-stash-add          - selective stash (git added files)
   git-sync               - git combo: fetch-[stash]-rebase-[stash pop]
-  ngrep                  - grep log on remote host / group at once
-  ntail                  - tail log on multiple machines at once
-  portof                 - get port number from $(getTerm env1) service name
   qclip                  - quick copy any variable to clipboard
-  qkill                  - quick kill process by $(getTerm env1) service name (local)
-  qlist                  - quick get list of running $(getTerm env1) services
-  qssh                   - quick ssh to another machine (implicitly through ansible)
   qstrip                 - quick strip a URL into readable format
   qtail                  - tail (coloured) directly from remote machine
-  serviceof              - get $(getTerm env1) service name from port number
-  ssh-mongo              - connect to remote mongo machine using ssh (semi-automatic)
   ssh-whoami             - get whoami status from $(getTerm env1) service name on target machine
   synch-db               - sync db from remote machine
   to-mongo               - connect to remote mongo machine directly (automatic)
@@ -32,9 +26,19 @@ calm down, here are some tools for you... ${uSMILE}
   unlock-keyboard        - resolve idea \"cannot type\" problem
   wew                    - check last command return status
 ${clDARKGRAY}currently disabled commands (under maintenance):
+  allservices            - list all $(getTerm env1) services
   exe (beta)             - run any command with elapsed time information
+  get-log-range          - get log range determined by keyword
+  ngrep                  - grep log on remote host / group at once
+  ntail                  - tail log on multiple machines at once
+  portof                 - get port number from $(getTerm env1) service name
+  qkill                  - quick kill process by $(getTerm env1) service name (local)
+  qlist                  - quick get list of running $(getTerm env1) services
   qpush                  - quick push binary to repo (batch-able)
   qpull                  - quick pull binary from repo to a remote server using ssh (semi-automatic)
+  qssh                   - quick ssh to another machine (implicitly through ansible)
+  serviceof              - get $(getTerm env1) service name from port number
+  ssh-mongo              - connect to remote mongo machine using ssh (semi-automatic)
 ${cLIGHTGRAY}
 tips: how to use? try one of those commands by run it without parameter
 "
@@ -42,20 +46,6 @@ tips: how to use? try one of those commands by run it without parameter
 
 running-dev2() {
 	ps aux | grep -v grep | grep dev2 | rev | cut -d' ' -f3 | rev
-}
-
-matrix() {
-	for x in {1..100000}; do
-		n=$RANDOM
-		let "y=n % 10"
-		if [ "$y" == 0 ]; then
-			echo -en "${cGREEN}$n "
-		else
-			echo -en "${clGREEN}$n "
-		fi
-		sleep .0005
-	done
-	echo -e "${cLIGHTGRAY}"
 }
 
 is() {
