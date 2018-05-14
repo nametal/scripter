@@ -316,7 +316,7 @@ qstrip() {
 
 git-sync() {
 	if [ $(git rev-parse --git-dir) ]; then # check whether this dir is git repository
-		git fetch
+		git fetch --no-tags
 		local branchName=$(getCurrentGitBranch)
 		local updatedCount=$(git log --oneline ${branchName}..origin/${branchName} | wc -l)
 		if [ $updatedCount -gt 0 ]; then
