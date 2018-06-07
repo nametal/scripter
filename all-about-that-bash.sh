@@ -14,7 +14,6 @@ calm down, here are some tools for you... ${uSMILE}
   get-millis             - get current time in milliseconds
   get-mongo-db-size      - get mongo database size
   get-mongo-colls        - get mongo collection names
-  git-stash-add          - selective stash (git added files)
   git-sync               - git combo: fetch-[stash]-rebase-[stash pop]
   qclip                  - quick copy any variable to clipboard
   qstrip                 - quick strip a URL into readable format
@@ -55,34 +54,6 @@ is() {
 		return 1
 	fi
 	[ $@ ] && echo true || echo false
-}
-
-git-stash-add() {
-	if [ -z "$1" ]; then
-		echo "instruction : stage files before stash by using git add"
-		echo "usage : git-stash-add <stash-name-or-comment>"
-		return 1
-	fi
-	stagedCount=$(git diff --cached --name-only | wc -l)
-	if [ $stagedCount -eq 0 ]; then
-		echo -e "${cYELLOW}stage files first using git add${cLIGHTGRAY}"
-		return 2
-	fi
-	echo -e "${cYELLOW}(1) commit added files as temp{cLIGHTGRAY}"
-	git commit -m  "temp"	# temporary commit staged files
-	if [ $? -ne 0 ]; then
-		echo -e "${cRED}failed to commit, please check your branch restriction${cLIGHTGRAY}"
-		return 3
-	fi
-	echo -e "${cYELLOW}(2) stash uncommit files{cLIGHTGRAY}"
-	git stash 				# temporary stash remaining files
-	echo -e "${cYELLOW}(3) reset temp commit, bring back to unstaged{cLIGHTGRAY}"
-	git reset --soft HEAD~ 	# bring back last committed files to unstaged
-	echo -e "${cYELLOW}(4) stash those files{cLIGHTGRAY}"
-	git stash save "${@}" 	# stash those files
-	echo -e "${cYELLOW}(5) unstash (2){cLIGHTGRAY}"
-	git stash pop stash@{1} # bring back previous files to unstaged
-	git stash list
 }
 
 ngrep() {
