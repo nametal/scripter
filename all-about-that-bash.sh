@@ -43,6 +43,10 @@ tips: how to use? try one of those commands by run it without parameter
 "
 }
 
+get-chmod-num() {
+	stat --format '%a' $1
+}
+
 running-dev2() {
 	ps aux | grep -v grep | grep dev2 | rev | cut -d' ' -f3 | rev
 }
@@ -349,7 +353,28 @@ qssh() {
 		echo "  target_machine   eg. tv, frs, tap"
 		return 1
 	fi
-	ssh -t $opt ansible01 "ssh $@"
+	ssh -t $opt $(getTerm prdgateway) $@
+}
+
+qpsql() {
+	if [ -z "$1" ]; then
+		echo "usage: qpqsl <username>"
+		return 1
+	fi
+	if [ -z "$2" ]; then
+		echo "connecting to replica"
+		hostname=$(getTerm replica)
+	else
+		if [ "$2" == "master" ]; then
+			echo "connecting to master"
+			hostname=$(getTerm master)
+		else
+			echo "'${2}' is unknown"
+			return 2
+		fi;
+	fi;
+	
+	qssh PGPASSWORD="'$(qdec $1)'" psql -h $hostname -d $(getTerm dbname) -U $1
 }
 
 # check last command return status
