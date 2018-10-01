@@ -218,6 +218,7 @@ single-dump() {
 		tmpFile=/tmp/$1.$2.$3.$(get-millis)
 	fi
 	if [ "$5" == "null" ]; then
+		# use mongodump for exporting in bson files
 		mongoexport --host $1:27017 --db $2 --collection $3 --out $tmpFile --query "$7"
 	else
 		mongoexport --host $1:27017 --db $2 --collection $3 --username $4 --password $5 --out $tmpFile --query "$7"
@@ -225,6 +226,8 @@ single-dump() {
 	if [ $? -eq 0 ]; then
 		echo -e "${cTURQUOISE}syncing ${3} to ${6}...${cLIGHTGRAY}"	
 		if [ -z "$7" ]; then
+			# use mongorestore for importing bson files, remove argument `--file`
+			# instead of $tmpFile, use this: restoredFile=$(find $tmpFile/$2/$3.bson)
 			mongoimport $MONGO_AUTH --host $6 --db $2 --collection $3 --file $tmpFile --drop
 		else # if query exists then remove documents instead of drop collections
 			echo -e "${cTURQUOISE}by ${7}...${cLIGHTGRAY}"
@@ -291,7 +294,12 @@ qstrip() {
 
 git-sync() {
 	if [ $(git rev-parse --git-dir) ]; then # check whether this dir is git repository
-		git fetch --no-tags
+		if [ -z "$1" ]; then
+			git fetch --no-tags
+		else
+			echo -e "only fetching ${1}..."
+			git fetch --no-tags origin $1
+		fi
 		local branchName=$(getCurrentGitBranch)
 		local updatedCount=$(git log --oneline ${branchName}..origin/${branchName} | wc -l)
 		if [ $updatedCount -gt 0 ]; then
@@ -373,7 +381,7 @@ qpsql() {
 			return 2
 		fi;
 	fi;
-	
+
 	qssh PGPASSWORD="'$(qdec $1)'" psql -h $hostname -d $(getTerm dbname) -U $1
 }
 
@@ -866,3 +874,5 @@ extract () {
        echo "'$1' is not a valid file!"
    fi
 }
+
+trap 'echo -e "${clPURPLE}-- Started at $(date +"%H:%M:%S") --${cLIGHTGRAY}"' DEBUG
