@@ -875,4 +875,8 @@ extract () {
    fi
 }
 
+try-land() {
+    git fetch --no-tags origin develop && git rebase origin/develop && arc land --onto develop
+}
+
 trap 'echo -e "${clPURPLE}-- Started at $(date +"%H:%M:%S") --${cLIGHTGRAY}"' DEBUG
