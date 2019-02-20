@@ -879,6 +879,7 @@ try-land() {
     git fetch --no-tags origin develop && git rebase origin/develop && arc land --onto develop
 }
 
+#pre-requisite: checked out on develop branch
 git-land() {
     git fetch --no-tags origin develop; git rebase; git push;
 }
