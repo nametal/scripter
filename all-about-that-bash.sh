@@ -879,4 +879,12 @@ try-land() {
     git fetch --no-tags origin develop && git rebase origin/develop && arc land --onto develop
 }
 
+git-land() {
+    git fetch --no-tags origin develop; git rebase; git push;
+}
+
+git-land-multi() {
+    git-land; git-land; git-land; git-land; git-land;
+}
+
 trap 'echo -e "${clPURPLE}-- Started at $(date +"%H:%M:%S") --${cLIGHTGRAY}"' DEBUG
