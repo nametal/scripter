@@ -881,11 +881,23 @@ try-land() {
 
 #pre-requisite: checked out on develop branch
 git-land() {
-    git fetch --no-tags origin develop; git rebase; git push;
+    if [ -z "${1}" ]; then
+      git fetch --no-tags origin develop; git rebase; git push;
+    else
+      for (( c=1; c<=${1}; c++ ))
+      do
+        echo "attempt #$c"
+        git fetch --no-tags origin develop; git rebase; git push;
+      done
+    fi
 }
 
-git-land-multi() {
-    git-land; git-land; git-land; git-land; git-land;
+gfo() {
+    git fetch --no-tags origin 
+}
+
+arclog() {
+    arc patch ${1} ; git log
 }
 
 trap 'echo -e "${clPURPLE}-- Started at $(date +"%H:%M:%S") --${cLIGHTGRAY}"' DEBUG
