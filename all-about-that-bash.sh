@@ -881,7 +881,11 @@ try-land() {
 
 #pre-requisite: checked out on develop branch
 git-land() {
-    if [ -z "${1}" ]; then
+    if [ "$(getCurrentGitBranch)" != "develop" ]; then
+        echo "pre-requisite: checked out on develop branch!"
+        echo "current branch: $(getCurrentGitBranch)";
+        return 1
+    elif [ -z "${1}" ]; then
       git fetch --no-tags origin develop; git rebase; git push;
     else
       for (( c=1; c<=${1}; c++ ))
