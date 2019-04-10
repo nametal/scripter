@@ -897,11 +897,37 @@ git-land() {
 }
 
 gfo() {
-    git fetch --no-tags origin 
+    git fetch --no-tags origin ${1};
+}
+
+gfo-endless() {
+    while [ : ]
+    do
+        git fetch --no-tags origin ${1};
+        sleep 30m
+    done
 }
 
 arclog() {
-    arc patch ${1} ; git log
+    arc patch ${1} ; git log;
 }
+
+greset() {
+     git add .; git reset --hard;
+}
+
+gfinds() {
+     git branch -r --contains ${1};
+}
+
+gcp() {
+     git cherry-pick ${1};
+}
+
+gcpa() {
+     git cherry-pick --abort;
+}
+
+
 
 trap 'echo -e "${clPURPLE}-- Started at $(date +"%H:%M:%S") --${cLIGHTGRAY}"' DEBUG
