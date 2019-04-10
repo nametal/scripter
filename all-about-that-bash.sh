@@ -928,6 +928,4 @@ gcpa() {
      git cherry-pick --abort;
 }
 
-
-
 trap 'echo -e "${clPURPLE}-- Started at $(date +"%H:%M:%S") --${cLIGHTGRAY}"' DEBUG
