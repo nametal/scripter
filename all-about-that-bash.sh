@@ -913,7 +913,7 @@ arclog() {
 }
 
 greset() {
-     git add .; git reset --hard;
+     git add .; git reset --hard ${1};
 }
 
 gfinds() {
