@@ -900,6 +900,11 @@ gfo() {
     git fetch --no-tags origin ${1};
 }
 
+gfor() {
+    currBranch=$(git branch | grep \* | cut -d ' ' -f2)
+    git fetch --no-tags origin $currBranch; git rebase;
+}
+
 gfo-endless() {
     while [ : ]
     do
