@@ -933,6 +933,13 @@ gcpa() {
      git cherry-pick --abort;
 }
 
+##change from flight/fpr-reschedule-booking-impl into ./gradlew flight:fpr-reschedule-booking-impl:idea
+gri() {
+  str=$(echo ${1} | sed "s/\//:/g" | xargs -I{} echo "./gradlew {}:idea")
+  echo "running $str";
+  $str;
+}
+
 
 
 trap 'echo -e "${clPURPLE}-- Started at $(date +"%H:%M:%S") --${cLIGHTGRAY}"' DEBUG
