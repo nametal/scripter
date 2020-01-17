@@ -905,14 +905,6 @@ gfor() {
     git fetch --no-tags origin $currBranch; git rebase;
 }
 
-gfo-endless() {
-    while [ : ]
-    do
-        git fetch --no-tags origin ${1};
-        sleep 30m
-    done
-}
-
 arclog() {
     arc patch ${1} ; git log;
 }
@@ -923,14 +915,6 @@ greset() {
 
 gfinds() {
      git branch -r --contains ${1};
-}
-
-gcp() {
-     git cherry-pick ${1};
-}
-
-gcpa() {
-     git cherry-pick --abort;
 }
 
 ##change from flight/fpr-reschedule-booking-impl into ./gradlew flight:fpr-reschedule-booking-impl:idea
