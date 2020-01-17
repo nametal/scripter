@@ -897,11 +897,33 @@ git-land() {
 }
 
 gfo() {
-    git fetch --no-tags origin 
+    git fetch --no-tags origin ${1};
+}
+
+gfor() {
+    currBranch=$(git branch | grep \* | cut -d ' ' -f2)
+    git fetch --no-tags origin $currBranch; git rebase;
 }
 
 arclog() {
-    arc patch ${1} ; git log
+    arc patch ${1} ; git log;
 }
+
+greset() {
+     git add .; git reset --hard ${1};
+}
+
+gfinds() {
+     git branch -r --contains ${1};
+}
+
+##change from flight/fpr-reschedule-booking-impl into ./gradlew flight:fpr-reschedule-booking-impl:idea
+gri() {
+  str=$(echo ${1} | sed "s/\//:/g" | xargs -I{} echo "./gradlew {}:idea")
+  echo "running $str";
+  $str;
+}
+
+
 
 trap 'echo -e "${clPURPLE}-- Started at $(date +"%H:%M:%S") --${cLIGHTGRAY}"' DEBUG
