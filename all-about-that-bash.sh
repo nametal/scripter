@@ -44,7 +44,7 @@ tips: how to use? try one of those commands by run it without parameter
 }
 
 eko() {
-	echo $1
+	echo -e $1
 }
 
 get-chmod-num() {
