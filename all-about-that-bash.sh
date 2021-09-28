@@ -47,6 +47,10 @@ eko() {
 	echo -e $1
 }
 
+eko2() {
+	eko $1
+}
+
 get-chmod-num() {
 	stat --format '%a' $1
 }
